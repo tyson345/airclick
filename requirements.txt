@@ -1,6 +1,6 @@
 Flask==2.3.3
 opencv-python==4.8.1.78
-mediapipe
+mediapipe==0.9.1
 numpy==1.24.3
 pyautogui==0.9.54
 pynput==1.7.6

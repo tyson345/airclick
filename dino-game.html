@@ -1,0 +1,1245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🦕 Dino Fist Game - Python AI Detection!</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #87CEEB 0%, #98FB98 50%, #F0E68C 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            color: #2E8B57;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .tech-badge {
+            display: inline-block;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin: 5px;
+        }
+
+        .game-area {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .canvas-section {
+            position: relative;
+        }
+
+        #gameCanvas {
+            border: 4px solid #2E8B57;
+            border-radius: 15px;
+            background: linear-gradient(to bottom, #87CEEB 0%, #F0E68C 70%, #8B4513 100%);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .game-info {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(46, 139, 87, 0.9);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .gesture-info {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 69, 0, 0.9);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        .controls-panel {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+            padding: 20px;
+            width: 350px;
+            border: 2px solid #dee2e6;
+        }
+
+        .camera-section h3 {
+            color: #2E8B57;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .camera-container {
+            position: relative;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        #videoElement {
+            width: 100%;
+            height: 200px;
+            border: 3px solid #2E8B57;
+            border-radius: 10px;
+            transform: scaleX(-1);
+            object-fit: cover;
+        }
+
+        .connection-status {
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .status-connected {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+        }
+
+        .status-disconnected {
+            background: linear-gradient(45deg, #dc3545, #fd7e14);
+            color: white;
+        }
+
+        .status-connecting {
+            background: linear-gradient(45deg, #ffc107, #fd7e14);
+            color: white;
+        }
+
+        .gesture-status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 12px;
+            background: linear-gradient(45deg, #ffffff, #f8f9fa);
+            border-radius: 10px;
+            border: 2px solid #dee2e6;
+        }
+
+        .status-indicator {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+        }
+
+        .status-fist {
+            background: linear-gradient(45deg, #dc3545, #fd7e14);
+            color: white;
+            animation: fistPulse 0.8s infinite alternate;
+            box-shadow: 0 0 15px rgba(220, 53, 69, 0.6);
+        }
+
+        .status-hand {
+            background: linear-gradient(45deg, #007bff, #6610f2);
+            color: white;
+        }
+
+        .status-none {
+            background: linear-gradient(45deg, #6c757d, #495057);
+            color: white;
+        }
+
+        @keyframes fistPulse {
+            from { transform: scale(1); box-shadow: 0 0 10px rgba(220, 53, 69, 0.5); }
+            to { transform: scale(1.05); box-shadow: 0 0 20px rgba(220, 53, 69, 0.8); }
+        }
+
+        .instructions {
+            background: linear-gradient(45deg, #fff3cd, #ffeaa7);
+            border: 2px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .instructions h4 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .instructions p {
+            color: #856404;
+            margin: 5px 0;
+            font-size: 0.9rem;
+        }
+
+        .button {
+            background: linear-gradient(45deg, #2E8B57, #3CB371);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(46, 139, 87, 0.3);
+        }
+
+        .button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .debug-info {
+            background: #343a40;
+            color: #ffffff;
+            border-radius: 10px;
+            padding: 10px;
+            margin-top: 15px;
+            font-size: 0.8rem;
+            font-family: 'Courier New', monospace;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+
+        .game-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 15px;
+        }
+
+        .overlay-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .overlay-content h2 {
+            color: #2E8B57;
+            margin-bottom: 15px;
+            font-size: 2rem;
+        }
+
+        .overlay-content p {
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-item {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2E8B57;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #666;
+            text-transform: uppercase;
+        }
+
+        .fist-indicator {
+            background: linear-gradient(45deg, #dc3545, #fd7e14);
+            color: white;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-weight: bold;
+            display: none;
+        }
+
+        .fist-indicator.active {
+            display: block;
+            animation: fistPulse 0.5s infinite alternate;
+        }
+
+        .test-jump {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 15px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .test-jump:hover {
+            transform: translateY(-1px);
+        }
+
+        .jump-controls {
+            background: #e3f2fd;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 2px solid #bbdefb;
+        }
+
+        .jump-controls h4 {
+            color: #1976d2;
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+
+        .slider-container {
+            margin-bottom: 10px;
+        }
+
+        .slider-container label {
+            display: block;
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .slider {
+            width: 100%;
+            height: 5px;
+            border-radius: 5px;
+            background: #ddd;
+            outline: none;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #2E8B57;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .game-area {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .controls-panel {
+                width: 100%;
+                max-width: 400px;
+            }
+            
+            #gameCanvas {
+                width: 100%;
+                max-width: 600px;
+                height: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1>🦕 Dino Fist Game</h1>
+            <p>
+                Make a FIST ✊ to jump over obstacles!
+                <br>
+                <span style="font-size:1rem;color:#1976d2;">
+                    Want to use <b>Peace Sign (✌️)</b> or other gestures? Try <a href="/dino-gesture" target="_blank" style="color:#1976d2;text-decoration:underline;">Dino Gesture Game (Browser)</a>
+                </span>
+            </p>
+            <div>
+                <span class="tech-badge">🐍 Python AI</span>
+                <span class="tech-badge">📷 OpenCV</span>
+                <span class="tech-badge">🤖 MediaPipe</span>
+                <span class="tech-badge">⚡ WebSocket</span>
+            </div>
+        </div>
+
+        <div class="game-area">
+            <div class="canvas-section">
+                <canvas id="gameCanvas" width="800" height="400"></canvas>
+                
+                <div class="game-info" id="gameInfo">
+                    Score: 0 | Speed: 1x
+                </div>
+                
+                <div class="gesture-info" id="gestureInfo">
+                    Gesture: None
+                </div>
+
+                <!-- Start Game Overlay -->
+                <div class="game-overlay" id="startOverlay">
+                    <div class="overlay-content">
+                        <h2>🚀 Ready to Play?</h2>
+                        <p>Start the Python server and enable your camera!</p>
+                        <button class="button" onclick="startGame()">Start Game</button>
+                    </div>
+                </div>
+
+                <!-- Game Over Overlay -->
+                <div class="game-overlay" id="gameOverOverlay" style="display: none;">
+                    <div class="overlay-content">
+                        <h2>💥 Game Over!</h2>
+                        <div class="stats">
+                            <div class="stat-item">
+                                <div class="stat-value" id="finalScore">0</div>
+                                <div class="stat-label">Score</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="finalTime">0s</div>
+                                <div class="stat-label">Time</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="finalJumps">0</div>
+                                <div class="stat-label">Jumps</div>
+                            </div>
+                        </div>
+                        <button class="button" onclick="restartGame()">Play Again</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="controls-panel">
+                <div class="camera-section">
+                    <h3>🤖 AI Detection System</h3>
+                    
+                    <div class="connection-status status-disconnected" id="connectionStatus">
+                        🔴 Python Server Disconnected
+                    </div>
+
+                    <div id="cameraPrompt">
+                        <p style="text-align: center; margin-bottom: 15px; color: #666;">
+                            Start Python server and enable camera
+                        </p>
+                        <button class="button" onclick="connectToServer()">Connect to AI Server</button>
+                    </div>
+
+                    <div id="cameraActive" style="display: none;">
+                        <div class="camera-container">
+                            <video id="videoElement" autoplay muted playsinline></video>
+                        </div>
+
+                        <div class="fist-indicator" id="fistIndicator">
+                            ✊ FIST DETECTED - JUMPING!
+                        </div>
+
+                        <div class="jump-controls">
+                            <h4>⏱️ Jump Settings:</h4>
+                            <div class="slider-container">
+                                <label for="jumpDelaySlider">Jump Delay: <span id="jumpDelayValue">600ms</span></label>
+                                <input type="range" id="jumpDelaySlider" class="slider" min="300" max="1500" step="100" value="600">
+                            </div>
+                            <div class="slider-container">
+                                <label for="stabilitySlider">Detection Stability: <span id="stabilityValue">3 frames</span></label>
+                                <input type="range" id="stabilitySlider" class="slider" min="2" max="5" value="3">
+                            </div>
+                        </div>
+
+                        <div class="gesture-status">
+                            <span style="font-weight: bold;">AI Status:</span>
+                            <div class="status-indicator status-none" id="gestureStatus">
+                                No Hand
+                            </div>
+                        </div>
+
+                        <button class="test-jump" onclick="testJump()">🦕 Test Jump (Click)</button>
+                        <button class="test-jump" onclick="testConnection()" style="background: linear-gradient(45deg, #007bff, #0056b3);">🔗 Test Connection</button>
+
+                        <div class="instructions">
+                            <h4>🤖 AI-Powered Fist Detection:</h4>
+                            <p>🐍 <strong>Python + MediaPipe</strong> - Professional hand tracking</p>
+                            <p>✊ <strong>Make a FIST</strong> - AI detects all fingers folded</p>
+                            <p>✌️ <strong>Peace Sign (2 fingers up)</strong> - <span style="color:#dc3545">Not supported in AI mode.<br>Use <a href="/dino-gesture" target="_blank" style="color:#1976d2;text-decoration:underline;">Dino Gesture Game (Browser)</a> for this gesture.</span></p>
+                            <p>🎯 <strong>Enhanced Accuracy</strong> - Improved detection with stability</p>
+                            <p>⚡ <strong>Responsive Controls</strong> - 600ms jump cooldown</p>
+                            <p>🐌 <strong>Progressive Speed</strong> - Starts slow, increases gradually</p>
+                            <p>💡 <strong>Better Feedback</strong> - Real-time detection status</p>
+                            <p>🧪 Use "Test Jump" to check game works</p>
+                        </div>
+
+                        <div class="debug-info" id="debugInfo">
+                            Waiting for AI server connection...
+                        </div>
+                    </div>
+
+                    <div id="serverError" style="display: none; text-align: center; color: #dc3545; padding: 15px;">
+                        <p><strong>Server Connection Error</strong></p>
+                        <p>Make sure Python server is running on localhost:8765</p>
+                        <button class="button" onclick="connectToServer()">Retry Connection</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game State
+        const gameState = {
+            isPlaying: false,
+            gameOver: false,
+            score: 0,
+            speed: 2, // Reduced from 5 to 2 for slower start
+            baseSpeed: 2, // Reduced from 5 to 2
+            maxSpeed: 8, // Maximum speed cap
+            speedIncreaseRate: 0.05, // Reduced from 0.1 to 0.05 for gradual increase
+            startTime: 0,
+            totalJumps: 0,
+            dino: {
+                x: 100,
+                y: 300,
+                width: 60,
+                height: 80,
+                velocityY: 0,
+                isJumping: false,
+                animFrame: 0
+            },
+            obstacles: [],
+            particles: [],
+            clouds: [],
+            groundY: 350,
+            gravity: 0.8,
+            jumpPower: -15
+        };
+
+        // AI Detection State
+        const aiState = {
+            websocket: null,
+            isConnected: false,
+            lastJumpTime: 0,
+            jumpCooldown: 600, // Reduced from 800ms for more responsive jumping
+            debugMessages: [],
+            handDetected: false,
+            fistDetected: false,
+            confidence: 0,
+            videoStream: null,
+            consecutiveFrames: 0,
+            noFistFrames: 0,
+            lastFistState: false // Track previous fist state for better feedback
+        };
+
+        // Canvas Setup
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Initialize clouds for background
+        function initClouds() {
+            gameState.clouds = [];
+            for (let i = 0; i < 5; i++) {
+                gameState.clouds.push({
+                    x: Math.random() * 1000,
+                    y: 50 + Math.random() * 100,
+                    size: 30 + Math.random() * 20,
+                    speed: 0.5 + Math.random() * 1
+                });
+            }
+        }
+
+        // Draw animated dino
+        function drawDino() {
+            const dino = gameState.dino;
+            
+            ctx.save();
+            ctx.translate(dino.x + dino.width/2, dino.y + dino.height/2);
+            
+            // Body
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(-25, -30, 50, 60);
+            
+            // Head
+            ctx.fillStyle = '#A0522D';
+            ctx.beginPath();
+            ctx.arc(0, -45, 25, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Eyes
+            const eyeOffset = Math.sin(dino.animFrame * 0.1) > 0.9 ? 0 : 8;
+            ctx.fillStyle = '#000';
+            ctx.fillRect(-12, -50, 6, eyeOffset || 8);
+            ctx.fillRect(6, -50, 6, eyeOffset || 8);
+            
+            // Eye shine
+            if (eyeOffset) {
+                ctx.fillStyle = '#FFF';
+                ctx.fillRect(-10, -48, 2, 2);
+                ctx.fillRect(8, -48, 2, 2);
+            }
+            
+            // Mouth
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(0, -35, 6, 0, Math.PI);
+            ctx.stroke();
+            
+            // Arms
+            const armSwing = Math.sin(dino.animFrame * 0.3) * 10;
+            ctx.strokeStyle = '#654321';
+            ctx.lineWidth = 8;
+            ctx.lineCap = 'round';
+            
+            ctx.beginPath();
+            ctx.moveTo(-25, -10);
+            ctx.lineTo(-35 + armSwing, 15);
+            ctx.moveTo(25, -10);
+            ctx.lineTo(35 - armSwing, 15);
+            ctx.stroke();
+            
+            // Legs
+            const legSwing = dino.isJumping ? 20 : Math.sin(dino.animFrame * 0.4) * 15;
+            ctx.beginPath();
+            ctx.moveTo(-15, 30);
+            ctx.lineTo(-20 + legSwing, 55);
+            ctx.moveTo(15, 30);
+            ctx.lineTo(20 - legSwing, 55);
+            ctx.stroke();
+            
+            // Feet
+            ctx.fillStyle = '#654321';
+            ctx.fillRect(-25 + legSwing, 55, 12, 8);
+            ctx.fillRect(13 - legSwing, 55, 12, 8);
+            
+            ctx.restore();
+        }
+
+        // Create obstacle
+        function createObstacle() {
+            return {
+                x: canvas.width,
+                y: gameState.groundY - 60,
+                width: 30,
+                height: 60,
+                passed: false
+            };
+        }
+
+        // Draw obstacle (cactus)
+        function drawObstacle(obstacle) {
+            ctx.fillStyle = '#228B22';
+            
+            // Main trunk
+            ctx.fillRect(obstacle.x + 10, obstacle.y, 10, obstacle.height);
+            
+            // Arms
+            ctx.fillRect(obstacle.x, obstacle.y + 15, 20, 8);
+            ctx.fillRect(obstacle.x + 5, obstacle.y + 5, 8, 20);
+            ctx.fillRect(obstacle.x + 15, obstacle.y + 30, 15, 8);
+            
+            // Spikes
+            ctx.fillStyle = '#006400';
+            for (let i = 0; i < obstacle.height; i += 10) {
+                ctx.fillRect(obstacle.x + 8, obstacle.y + i, 2, 4);
+                ctx.fillRect(obstacle.x + 12, obstacle.y + i + 5, 2, 4);
+                ctx.fillRect(obstacle.x + 16, obstacle.y + i, 2, 4);
+                ctx.fillRect(obstacle.x + 20, obstacle.y + i + 5, 2, 4);
+            }
+        }
+
+        // Create particles
+        function createParticles(x, y, count = 10) {
+            for (let i = 0; i < count; i++) {
+                gameState.particles.push({
+                    x: x + Math.random() * 20 - 10,
+                    y: y + Math.random() * 20 - 10,
+                    vx: (Math.random() - 0.5) * 8,
+                    vy: (Math.random() - 0.5) * 8 - 2,
+                    life: 30,
+                    maxLife: 30,
+                    size: 2 + Math.random() * 3,
+                    color: `hsl(${30 + Math.random() * 60}, 70%, 60%)`
+                });
+            }
+        }
+
+        // Update and draw particles
+        function updateParticles() {
+            gameState.particles = gameState.particles.filter(particle => {
+                particle.x += particle.vx;
+                particle.y += particle.vy;
+                particle.vy += 0.2;
+                particle.life--;
+                
+                const alpha = particle.life / particle.maxLife;
+                ctx.save();
+                ctx.globalAlpha = alpha;
+                ctx.fillStyle = particle.color;
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+                
+                return particle.life > 0;
+            });
+        }
+
+        // Draw background
+        function drawBackground() {
+            // Sky gradient
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#87CEEB');
+            gradient.addColorStop(0.7, '#F0E68C');
+            gradient.addColorStop(1, '#8B4513');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Clouds
+            gameState.clouds.forEach(cloud => {
+                cloud.x -= cloud.speed;
+                if (cloud.x < -cloud.size) {
+                    cloud.x = canvas.width + cloud.size;
+                }
+                
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                ctx.beginPath();
+                ctx.arc(cloud.x, cloud.y, cloud.size, 0, Math.PI * 2);
+                ctx.arc(cloud.x + cloud.size * 0.5, cloud.y, cloud.size * 0.7, 0, Math.PI * 2);
+                ctx.arc(cloud.x - cloud.size * 0.5, cloud.y, cloud.size * 0.7, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            
+            // Ground
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(0, gameState.groundY, canvas.width, canvas.height - gameState.groundY);
+            
+            // Grass
+            ctx.strokeStyle = '#228B22';
+            ctx.lineWidth = 2;
+            for (let i = 0; i < canvas.width; i += 10) {
+                const height = 8 + Math.sin(i * 0.1) * 3;
+                ctx.beginPath();
+                ctx.moveTo(i, gameState.groundY);
+                ctx.lineTo(i + 1, gameState.groundY - height);
+                ctx.lineTo(i + 3, gameState.groundY);
+                ctx.stroke();
+            }
+        }
+
+        // Connect to Python AI server
+        async function connectToServer() {
+            updateDebugInfo('Connecting to Python AI server...');
+            updateConnectionStatus('connecting');
+            
+            try {
+                aiState.websocket = new WebSocket('ws://localhost:8765');
+                
+                aiState.websocket.onopen = function(event) {
+                    aiState.isConnected = true;
+                    updateConnectionStatus('connected');
+                    updateDebugInfo('✅ Connected to Python AI server!');
+                    enableCamera();
+                };
+                
+                aiState.websocket.onmessage = function(event) {
+                    const message = JSON.parse(event.data);
+                    
+                    if (message.type === 'gesture_detection') {
+                        handleGestureDetection(message.data);
+                    } else if (message.type === 'test_response') {
+                        updateDebugInfo(`✅ Server response: ${message.message}`);
+                    }
+                };
+                
+                aiState.websocket.onclose = function(event) {
+                    aiState.isConnected = false;
+                    updateConnectionStatus('disconnected');
+                    updateDebugInfo('❌ Disconnected from Python server');
+                };
+                
+                aiState.websocket.onerror = function(error) {
+                    aiState.isConnected = false;
+                    updateConnectionStatus('disconnected');
+                    updateDebugInfo('❌ Connection error: ' + error);
+                    document.getElementById('cameraPrompt').style.display = 'none';
+                    document.getElementById('serverError').style.display = 'block';
+                };
+                
+            } catch (error) {
+                updateConnectionStatus('disconnected');
+                updateDebugInfo('❌ Failed to connect: ' + error.message);
+                document.getElementById('cameraPrompt').style.display = 'none';
+                document.getElementById('serverError').style.display = 'block';
+            }
+        }
+
+        // Handle gesture detection from Python server
+        function handleGestureDetection(data) {
+            aiState.handDetected = data.hand_detected;
+            aiState.fistDetected = data.fist_detected;
+            aiState.confidence = data.confidence;
+            aiState.consecutiveFrames = data.consecutive_frames || 0;
+            aiState.noFistFrames = data.no_fist_frames || 0;
+            
+            // Track state changes for better feedback
+            const fistStateChanged = aiState.fistDetected !== aiState.lastFistState;
+            aiState.lastFistState = aiState.fistDetected;
+            
+            // Update UI
+            updateGestureStatus();
+            
+            // Enhanced debug info with server debug info
+            const serverDebug = data.debug_info || 'No debug info';
+            updateDebugInfo(
+                `Hand: ${aiState.handDetected ? 'YES' : 'NO'} | ` +
+                `Fist: ${aiState.fistDetected ? 'YES' : 'NO'} | ` +
+                `Frames: ${aiState.consecutiveFrames}/3 | ` +
+                `No-Fist: ${aiState.noFistFrames}/2 | ` +
+                `Confidence: ${(aiState.confidence * 100).toFixed(1)}% | ` +
+                `Server: ${serverDebug}`
+            );
+            
+            // TRIGGER JUMP when fist is detected with cooldown
+            if (aiState.fistDetected && gameState.isPlaying) {
+                const now = Date.now();
+                const timeSinceLastJump = now - aiState.lastJumpTime;
+                
+                if (timeSinceLastJump > aiState.jumpCooldown) {
+                    jump();
+                    aiState.lastJumpTime = now;
+                    updateDebugInfo('🦕 AI DETECTED STABLE FIST - JUMP TRIGGERED!');
+                } else {
+                    const remainingCooldown = aiState.jumpCooldown - timeSinceLastJump;
+                    updateDebugInfo(`⏳ Jump cooldown: ${remainingCooldown}ms remaining`);
+                }
+            }
+            
+            // Provide feedback when fist state changes
+            if (fistStateChanged) {
+                if (aiState.fistDetected) {
+                    updateDebugInfo('✊ FIST DETECTED - Ready to jump!');
+                } else {
+                    updateDebugInfo('✋ Fist released - Waiting for next fist...');
+                }
+            }
+        }
+
+        // Update connection status
+        function updateConnectionStatus(status) {
+            const statusElement = document.getElementById('connectionStatus');
+            statusElement.className = 'connection-status';
+            
+            switch (status) {
+                case 'connected':
+                    statusElement.className += ' status-connected';
+                    statusElement.textContent = '🟢 Python AI Server Connected';
+                    break;
+                case 'connecting':
+                    statusElement.className += ' status-connecting';
+                    statusElement.textContent = '🟡 Connecting to Python Server...';
+                    break;
+                case 'disconnected':
+                default:
+                    statusElement.className += ' status-disconnected';
+                    statusElement.textContent = '🔴 Python Server Disconnected';
+                    break;
+            }
+        }
+
+        // Enable camera and start video streaming
+        async function enableCamera() {
+            try {
+                updateDebugInfo('Requesting camera access...');
+                
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { 
+                        width: { ideal: 640, min: 320 },
+                        height: { ideal: 480, min: 240 },
+                        facingMode: 'user',
+                        frameRate: { ideal: 30, min: 15 }
+                    }
+                });
+
+                const video = document.getElementById('videoElement');
+                video.srcObject = stream;
+                aiState.videoStream = stream;
+                
+                video.onloadedmetadata = () => {
+                    updateDebugInfo('Camera enabled, starting AI detection...');
+                    
+                    video.play().then(() => {
+                        document.getElementById('cameraPrompt').style.display = 'none';
+                        document.getElementById('cameraActive').style.display = 'block';
+                        
+                        // Start sending video frames to Python server
+                        startVideoStreaming();
+                        
+                        updateDebugInfo('🎥 Video streaming to AI server started!');
+                    }).catch(error => {
+                        updateDebugInfo(`Video play error: ${error.message}`);
+                    });
+                };
+
+                // Add jump delay control
+                document.getElementById('jumpDelaySlider').addEventListener('input', (e) => {
+                    aiState.jumpCooldown = parseInt(e.target.value);
+                    document.getElementById('jumpDelayValue').textContent = `${e.target.value}ms`;
+                    updateDebugInfo(`Jump delay updated: ${e.target.value}ms`);
+                });
+
+                // Add stability control
+                document.getElementById('stabilitySlider').addEventListener('input', (e) => {
+                    const frames = parseInt(e.target.value);
+                    document.getElementById('stabilityValue').textContent = `${frames} frames`;
+                    updateDebugInfo(`Stability requirement: ${frames} frames`);
+                    
+                    // Send to Python server
+                    if (aiState.websocket && aiState.websocket.readyState === WebSocket.OPEN) {
+                        aiState.websocket.send(JSON.stringify({
+                            type: 'update_settings',
+                            stability_frames: frames
+                        }));
+                    }
+                });
+
+            } catch (error) {
+                console.error('Camera error:', error);
+                updateDebugInfo(`Camera error: ${error.message}`);
+            }
+        }
+
+        // Start streaming video frames to Python server
+        function startVideoStreaming() {
+            const video = document.getElementById('videoElement');
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = 320;
+            canvas.height = 240;
+            
+            function sendFrame() {
+                if (aiState.isConnected && video.readyState === video.HAVE_ENOUGH_DATA) {
+                    // Draw video frame to canvas
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    
+                    // Convert to base64 and send to Python server
+                    const dataURL = canvas.toDataURL('image/jpeg', 0.8);
+                    
+                    if (aiState.websocket && aiState.websocket.readyState === WebSocket.OPEN) {
+                        aiState.websocket.send(JSON.stringify({
+                            type: 'video_frame',
+                            frame: dataURL
+                        }));
+                    }
+                }
+                
+                // Send frames at 10 FPS to reduce load
+                setTimeout(sendFrame, 100);
+            }
+            
+            sendFrame();
+        }
+
+        // Update gesture status display
+        function updateGestureStatus() {
+            const statusElement = document.getElementById('gestureStatus');
+            const gestureInfo = document.getElementById('gestureInfo');
+            const fistIndicator = document.getElementById('fistIndicator');
+            
+            statusElement.className = 'status-indicator';
+            
+            if (aiState.fistDetected) {
+                statusElement.className += ' status-fist';
+                statusElement.textContent = '✊ FIST DETECTED!';
+                gestureInfo.textContent = 'AI: FIST DETECTED - READY TO JUMP!';
+                fistIndicator.className = 'fist-indicator active';
+            } else if (aiState.handDetected) {
+                statusElement.className += ' status-hand';
+                statusElement.textContent = '✋ Hand Detected by AI';
+                gestureInfo.textContent = 'AI: Hand Visible - Make a Fist';
+                fistIndicator.className = 'fist-indicator';
+            } else {
+                statusElement.className += ' status-none';
+                statusElement.textContent = '❌ No Hand Detected';
+                gestureInfo.textContent = 'AI: No Hand - Show Your Hand to Camera';
+                fistIndicator.className = 'fist-indicator';
+            }
+        }
+
+        // Update debug information
+        function updateDebugInfo(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            aiState.debugMessages.unshift(`${timestamp}: ${message}`);
+            if (aiState.debugMessages.length > 8) {
+                aiState.debugMessages.pop();
+            }
+            
+            const debugElement = document.getElementById('debugInfo');
+            if (debugElement) {
+                debugElement.textContent = aiState.debugMessages.join('\n');
+            }
+        }
+
+        // Test jump function for debugging
+        function testJump() {
+            if (gameState.isPlaying) {
+                jump();
+                updateDebugInfo('🧪 Test jump executed!');
+            } else {
+                updateDebugInfo('Start game first to test jump!');
+            }
+        }
+
+        // Test connection function for debugging
+        function testConnection() {
+            updateDebugInfo('🔗 Testing connection to AI server...');
+            
+            if (!aiState.isConnected) {
+                updateDebugInfo('❌ Not connected to AI server. Click "Connect to AI Server" first.');
+                return;
+            }
+            
+            if (!aiState.websocket || aiState.websocket.readyState !== WebSocket.OPEN) {
+                updateDebugInfo('❌ WebSocket connection is not open');
+                return;
+            }
+            
+            // Send a test message
+            try {
+                aiState.websocket.send(JSON.stringify({
+                    type: 'test_message',
+                    message: 'Connection test from game'
+                }));
+                updateDebugInfo('✅ Test message sent to server');
+            } catch (error) {
+                updateDebugInfo(`❌ Failed to send test message: ${error.message}`);
+            }
+        }
+
+        // Jump function
+        function jump() {
+            if (!gameState.dino.isJumping) {
+                gameState.dino.velocityY = gameState.jumpPower;
+                gameState.dino.isJumping = true;
+                gameState.totalJumps++;
+                
+                // Create jump particles
+                createParticles(gameState.dino.x + gameState.dino.width/2, gameState.dino.y + gameState.dino.height);
+            }
+        }
+
+        // Game loop
+        function gameLoop() {
+            if (!gameState.isPlaying) return;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw background
+            drawBackground();
+            
+            // Update dino physics
+            if (gameState.dino.isJumping) {
+                gameState.dino.velocityY += gameState.gravity;
+                gameState.dino.y += gameState.dino.velocityY;
+                
+                if (gameState.dino.y >= gameState.groundY - gameState.dino.height) {
+                    gameState.dino.y = gameState.groundY - gameState.dino.height;
+                    gameState.dino.velocityY = 0;
+                    gameState.dino.isJumping = false;
+                    
+                    // Landing particles
+                    createParticles(gameState.dino.x + gameState.dino.width/2, gameState.dino.y + gameState.dino.height, 5);
+                }
+            }
+            
+            // Update animation frame
+            gameState.dino.animFrame += 0.2;
+            
+            // Spawn obstacles
+            if (gameState.obstacles.length === 0 || gameState.obstacles[gameState.obstacles.length - 1].x < canvas.width - 300) {
+                if (Math.random() < 0.02) {
+                    gameState.obstacles.push(createObstacle());
+                }
+            }
+            
+            // Update obstacles
+            gameState.obstacles = gameState.obstacles.filter(obstacle => {
+                obstacle.x -= gameState.speed;
+                
+                // Check if passed
+                if (!obstacle.passed && obstacle.x + obstacle.width < gameState.dino.x) {
+                    obstacle.passed = true;
+                    gameState.score++;
+                    // Gradual speed increase with cap
+                    gameState.speed = Math.min(
+                        gameState.maxSpeed,
+                        gameState.baseSpeed + (gameState.score * gameState.speedIncreaseRate)
+                    );
+                }
+                
+                return obstacle.x > -obstacle.width;
+            });
+            
+            // Collision detection
+            for (let obstacle of gameState.obstacles) {
+                if (gameState.dino.x < obstacle.x + obstacle.width &&
+                    gameState.dino.x + gameState.dino.width > obstacle.x &&
+                    gameState.dino.y < obstacle.y + obstacle.height &&
+                    gameState.dino.y + gameState.dino.height > obstacle.y) {
+                    
+                    // Game over
+                    gameOver();
+                    return;
+                }
+            }
+            
+            // Draw everything
+            drawDino();
+            gameState.obstacles.forEach(drawObstacle);
+            updateParticles();
+            
+            // Update UI
+            const gameInfo = document.getElementById('gameInfo');
+            const speedPercentage = ((gameState.speed - gameState.baseSpeed) / (gameState.maxSpeed - gameState.baseSpeed) * 100).toFixed(0);
+            gameInfo.textContent = `Score: ${gameState.score} | Speed: ${gameState.speed.toFixed(1)}x (${speedPercentage}%)`;
+            
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Start game
+        function startGame() {
+            if (!aiState.isConnected) {
+                alert('Please connect to Python AI server first!');
+                return;
+            }
+            
+            // Reset game state
+            gameState.isPlaying = true;
+            gameState.gameOver = false;
+            gameState.score = 0;
+            gameState.speed = gameState.baseSpeed;
+            gameState.startTime = Date.now();
+            gameState.totalJumps = 0;
+            
+            gameState.dino.y = gameState.groundY - gameState.dino.height;
+            gameState.dino.velocityY = 0;
+            gameState.dino.isJumping = false;
+            gameState.dino.animFrame = 0;
+            
+            gameState.obstacles = [];
+            gameState.particles = [];
+            
+            // Reset AI timing
+            aiState.lastJumpTime = 0;
+            
+            // Hide start overlay
+            document.getElementById('startOverlay').style.display = 'none';
+            
+            // Initialize and start game loop
+            initClouds();
+            gameLoop();
+            
+            updateDebugInfo('🎮 Game started! AI is watching for fist gestures!');
+        }
+
+        // Game over
+        function gameOver() {
+            gameState.isPlaying = false;
+            gameState.gameOver = true;
+            
+            // Create explosion particles
+            createParticles(gameState.dino.x + gameState.dino.width/2, gameState.dino.y + gameState.dino.height/2, 20);
+            
+            // Calculate stats
+            const survivalTime = Math.floor((Date.now() - gameState.startTime) / 1000);
+            
+            // Update game over screen
+            document.getElementById('finalScore').textContent = gameState.score;
+            document.getElementById('finalTime').textContent = `${survivalTime}s`;
+            document.getElementById('finalJumps').textContent = gameState.totalJumps;
+            document.getElementById('gameOverOverlay').style.display = 'flex';
+            
+            updateDebugInfo(`💥 Game over! Score: ${gameState.score} | Jumps: ${gameState.totalJumps}`);
+        }
+
+        // Restart game
+        function restartGame() {
+            document.getElementById('gameOverOverlay').style.display = 'none';
+            startGame();
+        }
+
+        // Initialize game
+        function initGame() {
+            initClouds();
+            updateDebugInfo('🦕 Game ready! Connect to Python AI server to start!');
+            updateConnectionStatus('disconnected');
+        }
+
+        // Start initialization
+        initGame();
+    </script>
+</body>
+</html>

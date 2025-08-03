@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gesture Control Hub</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow-x: hidden;
+    }
+
+    .container {
+      text-align: center;
+      max-width: 1200px;
+      width: 100%;
+      position: relative;
+    }
+
+    h1 {
+      font-size: 3.5rem;
+      color: #00ffff;
+      text-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+      margin-bottom: 60px;
+      animation: glow 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes glow {
+      from { text-shadow: 0 0 20px rgba(0, 255, 255, 0.5); }
+      to { text-shadow: 0 0 30px rgba(0, 255, 255, 0.8); }
+    }
+
+    .carousel-container {
+      position: relative;
+      width: 100%;
+      height: 500px;
+      perspective: 1000px;
+      margin: 0 auto;
+    }
+
+    .carousel {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      transition: transform 0.6s ease-in-out;
+    }
+
+    .mode-card {
+      position: absolute;
+      width: 400px;
+      height: 300px;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      background: linear-gradient(135deg, #00bcd4, #0097a7);
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.6s ease-in-out;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+      border: 2px solid transparent;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 30px;
+      opacity: 0.7;
+      transform-origin: center;
+    }
+
+    .mode-card.active {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1.1);
+      box-shadow: 0 25px 50px rgba(0, 188, 212, 0.4);
+      border-color: #00ffff;
+      z-index: 10;
+    }
+
+    .mode-card.prev {
+      transform: translate(-120%, -50%) scale(0.8) rotateY(15deg);
+      opacity: 0.6;
+    }
+
+    .mode-card.next {
+      transform: translate(20%, -50%) scale(0.8) rotateY(-15deg);
+      opacity: 0.6;
+    }
+
+    .mode-card.hidden {
+      transform: translate(-50%, -50%) scale(0.6);
+      opacity: 0.3;
+    }
+
+    .mode-icon {
+      font-size: 3rem;
+      margin-bottom: 15px;
+      filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
+    }
+
+    .mode-title {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .mode-description {
+      font-size: 1rem;
+      opacity: 0.9;
+      font-weight: 400;
+      line-height: 1.4;
+    }
+
+    .carousel-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: white;
+      font-size: 2rem;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+      z-index: 20;
+    }
+
+    .carousel-nav:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateY(-50%) scale(1.1);
+    }
+
+    .carousel-nav.prev {
+      left: 20px;
+    }
+
+    .carousel-nav.next {
+      right: 20px;
+    }
+
+    .mode-indicators {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 10px; /* changed from 30px to 10px */
+    }
+
+    .indicator {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .indicator.active {
+      background: #00ffff;
+      transform: scale(1.2);
+    }
+
+         .action-buttons {
+       position: absolute;
+       top: 20px;
+       right: 20px;
+       display: flex;
+       gap: 10px;
+       z-index: 30;
+     }
+
+                   .action-btn {
+        background: linear-gradient(135deg, #4caf50, #388e3c);
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+        display: none;
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+    .action-btn:hover {
+      transform: translateY(-2px) scale(1.05);
+      box-shadow: 0 12px 25px rgba(76, 175, 80, 0.4);
+    }
+
+         .action-btn.visible {
+       display: block;
+       opacity: 1;
+       transform: translateY(0);
+       animation: slideUp 0.3s ease;
+     }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .close-btn {
+      background: linear-gradient(135deg, #f44336, #d32f2f);
+    }
+
+    .close-btn:hover {
+      box-shadow: 0 12px 25px rgba(244, 67, 54, 0.4);
+    }
+
+         .game-options {
+       margin-top: 20px;
+       display: none;
+       width: 100%;
+       opacity: 0;
+       transform: translateY(20px);
+       transition: all 0.3s ease;
+     }
+
+         .game-option-btn {
+       background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+       color: white;
+       border: none;
+       padding: 15px 25px;
+       font-size: 1.1rem;
+       font-weight: 600;
+       border-radius: 15px;
+       cursor: pointer;
+       transition: all 0.3s ease;
+       box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+       margin: 8px;
+       width: 100%;
+       max-width: 300px;
+       display: block;
+     }
+
+    .game-option-btn:hover {
+      transform: translateY(-2px) scale(1.05);
+      box-shadow: 0 8px 20px rgba(255, 107, 107, 0.4);
+    }
+
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.9);
+      color: white;
+      padding: 15px 20px;
+      border-radius: 8px;
+      border-left: 4px solid #00bcd4;
+      display: none;
+      z-index: 1000;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(100%);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    footer {
+      position: fixed;
+      bottom: 20px;
+      font-size: 0.9rem;
+      color: #ccc;
+      text-align: center;
+    }
+
+         /* Instruction Modal */
+     .instruction-modal {
+       position: fixed;
+       top: 0;
+       left: 0;
+       width: 100%;
+       height: 100%;
+       background: rgba(0, 0, 0, 0.8);
+       display: none;
+       justify-content: center;
+       align-items: center;
+       z-index: 1000;
+       animation: fadeIn 0.3s ease;
+     }
+
+     .instruction-content {
+       background: linear-gradient(135deg, #1a1a2e, #16213e);
+       border-radius: 20px;
+       padding: 30px;
+       max-width: 600px;
+       width: 90%;
+       max-height: 80vh;
+       overflow-y: auto;
+       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+       border: 2px solid #00ffff;
+       animation: slideUp 0.3s ease;
+     }
+
+     .instruction-header {
+       text-align: center;
+       margin-bottom: 25px;
+       border-bottom: 2px solid #00ffff;
+       padding-bottom: 15px;
+     }
+
+     .instruction-title {
+       font-size: 2rem;
+       color: #00ffff;
+       margin-bottom: 10px;
+     }
+
+     .instruction-subtitle {
+       color: #ccc;
+       font-size: 1rem;
+     }
+
+     .instruction-list {
+       list-style: none;
+       padding: 0;
+     }
+
+     .instruction-list li {
+       background: rgba(255, 255, 255, 0.05);
+       margin: 10px 0;
+       padding: 15px;
+       border-radius: 10px;
+       border-left: 4px solid #00ffff;
+       display: flex;
+       align-items: center;
+       gap: 15px;
+     }
+
+     .instruction-icon {
+       font-size: 1.5rem;
+       min-width: 30px;
+     }
+
+     .instruction-text {
+       color: #fff;
+       line-height: 1.5;
+     }
+
+     .instruction-close {
+       background: linear-gradient(135deg, #00bcd4, #0097a7);
+       color: white;
+       border: none;
+       padding: 15px 30px;
+       border-radius: 25px;
+       font-size: 1.1rem;
+       font-weight: 600;
+       cursor: pointer;
+       transition: all 0.3s ease;
+       margin-top: 20px;
+       width: 100%;
+     }
+
+     .instruction-close:hover {
+       transform: translateY(-2px);
+       box-shadow: 0 10px 20px rgba(0, 188, 212, 0.3);
+     }
+
+     @keyframes fadeIn {
+       from { opacity: 0; }
+       to { opacity: 1; }
+     }
+
+     @keyframes slideUp {
+       from { 
+         opacity: 0;
+         transform: translateY(50px);
+       }
+       to { 
+         opacity: 1;
+         transform: translateY(0);
+       }
+     }
+
+     @media (max-width: 768px) {
+       h1 { font-size: 2.5rem; }
+       .mode-card { width: 300px; height: 250px; }
+       .carousel-nav { width: 40px; height: 40px; font-size: 1.5rem; }
+       .mode-title { font-size: 1.4rem; }
+       .mode-icon { font-size: 2.5rem; }
+       .instruction-content { padding: 20px; }
+       .instruction-title { font-size: 1.5rem; }
+     }
+
+    .refresh-btn {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: linear-gradient(135deg, #2196f3, #1565c0);
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 5px 15px rgba(33, 150, 243, 0.3);
+      z-index: 31;
+    }
+
+    .refresh-btn:hover {
+      transform: translateY(-2px) scale(1.05);
+      box-shadow: 0 12px 25px rgba(33, 150, 243, 0.4);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <button class="refresh-btn" onclick="location.reload()">
+      ⟳ Refresh
+    </button>
+    <h1>Gesture Control Hub</h1>
+    
+    <div class="carousel-container">
+      <button class="carousel-nav prev" onclick="navigateCarousel(-1)">‹</button>
+      <button class="carousel-nav next" onclick="navigateCarousel(1)">›</button>
+      
+      <div class="carousel" id="carousel">
+        <div class="mode-card active" data-mode="regular" onclick="selectMode('regular')">
+          <div class="mode-icon">🖱️</div>
+          <div class="mode-title">Regular Mouse</div>
+          <div class="mode-description">Standard mouse control for everyday use</div>
+        </div>
+        
+        <div class="mode-card next" data-mode="movie" onclick="selectMode('movie')">
+          <div class="mode-icon">🎬</div>
+          <div class="mode-title">Movie Mode</div>
+          <div class="mode-description">Optimized for media playback and streaming</div>
+        </div>
+        
+        <div class="mode-card hidden" data-mode="game" onclick="selectMode('game')">
+          <div class="mode-icon">🎮</div>
+          <div class="mode-title">Game Mode</div>
+          <div class="mode-description">Enhanced precision for gaming applications</div>
+        </div>
+        
+        <div class="mode-card hidden" data-mode="presentation" onclick="selectMode('presentation')">
+          <div class="mode-icon">📊</div>
+          <div class="mode-title">Presentation Mode</div>
+          <div class="mode-description">Perfect for presentations and public speaking</div>
+        </div>
+        
+        <div class="mode-card hidden" data-mode="camera" onclick="selectMode('camera')">
+          <div class="mode-icon">📷</div>
+          <div class="mode-title">Camera Mode</div>
+          <div class="mode-description">Take photos (2 fingers) or videos (3 fingers)</div>
+        </div>
+        
+        <div class="mode-card hidden" data-mode="websocket" onclick="startWebSocketServer()">
+          <div class="mode-icon">🔌</div>
+          <div class="mode-title">AI Server</div>
+          <div class="mode-description">Start Python WebSocket server for AI detection</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mode-indicators" id="indicators">
+      <div class="indicator active" onclick="goToSlide(0)"></div>
+      <div class="indicator" onclick="goToSlide(1)"></div>
+      <div class="indicator" onclick="goToSlide(2)"></div>
+      <div class="indicator" onclick="goToSlide(3)"></div>
+      <div class="indicator" onclick="goToSlide(4)"></div>
+      <div class="indicator" onclick="goToSlide(5)"></div>
+    </div>
+
+                   <div class="action-buttons" id="action-buttons">
+        <button class="action-btn close-btn" id="close-btn" onclick="closeCurrentMode()">
+          ✖ Close Mode
+        </button>
+                 <div class="game-options" id="game-options">
+            <h3 style="color: #fff; margin-bottom: 15px; text-align: center;">🎮 Choose Your Game:</h3>
+            <button class="game-option-btn" onclick="openDinoGame()">
+              🦕 Dino Fist Game (AI)
+            </button>
+            <button class="game-option-btn" onclick="openDinoGesture()">
+              👆 Dino Gesture Game (Browser)
+            </button>
+          </div>
+      </div>
+  </div>
+
+     <div class="notification" id="notification"></div>
+   
+   <!-- Instruction Modal -->
+   <div class="instruction-modal" id="instructionModal">
+     <div class="instruction-content">
+       <div class="instruction-header">
+         <div class="instruction-title" id="instructionTitle">Mode Instructions</div>
+         <div class="instruction-subtitle" id="instructionSubtitle">Learn how to use this mode</div>
+       </div>
+       <ul class="instruction-list" id="instructionList">
+         <!-- Instructions will be populated by JavaScript -->
+       </ul>
+       <button class="instruction-close" onclick="closeInstructionModal()">Got it! Start Mode</button>
+     </div>
+   </div>
+   
+   <footer>
+     &copy; 2025 Sourabh | All rights reserved
+   </footer>
+
+  <script>
+         let currentSlide = 0;
+     let currentMode = null;
+     let pendingMode = null;
+     const totalSlides = 6;
+     const modes = ['regular', 'movie', 'game', 'presentation', 'camera', 'websocket'];
+
+     // Instruction data for each mode
+     const modeInstructions = {
+       regular: {
+         title: "🖱️ Regular Mouse Mode",
+         subtitle: "Control your mouse with hand gestures",
+         instructions: [
+           { icon: "👆", text: "Point with index finger to move cursor" },
+           { icon: "✋", text: "Show all 4 fingers to move cursor freely" },
+           { icon: "☝️", text: "Index finger only = Left Click" },
+           { icon: "✌️", text: "Index + Middle finger = Right Click" },
+           { icon: "👍", text: "Thumb only = Scroll Up" },
+           { icon: "👎", text: "Index only = Scroll Down" },
+           { icon: "✊", text: "Make a fist = Take Screenshot" }
+         ]
+       },
+       movie: {
+         title: "🎬 Movie Mode",
+         subtitle: "Control media playback with gestures",
+         instructions: [
+           { icon: "☝️", text: "1 finger = Play/Pause" },
+           { icon: "✌️", text: "2 fingers = Fast Forward" },
+           { icon: "🤟", text: "3 fingers = Rewind" },
+           { icon: "📺", text: "Works with YouTube, Netflix, and other media players" }
+         ]
+       },
+       game: {
+         title: "🎮 Game Mode",
+         subtitle: "Play the Dino Game with AI-powered gesture detection",
+         instructions: [
+           { icon: "🦕", text: "The game will open in a new tab" },
+           { icon: "✊", text: "Make a FIST to make the dino jump" },
+           { icon: "🤖", text: "Uses Python AI with MediaPipe for accurate detection" },
+           { icon: "📷", text: "Enable camera access when prompted" },
+           { icon: "🎯", text: "Jump over obstacles to score points" }
+         ]
+       },
+       presentation: {
+         title: "📊 Presentation Mode",
+         subtitle: "Control presentations with hand gestures",
+         instructions: [
+           { icon: "🖐️", text: "5 fingers = Start/Fullscreen Presentation" },
+           { icon: "✊", text: "Fist (0 fingers) = Exit Presentation" },
+           { icon: "☝️", text: "Index finger only = Next Slide" },
+           { icon: "✌️", text: "Index + Middle finger = Previous Slide" },
+           { icon: "📱", text: "Works with PowerPoint, Google Slides, and more" }
+         ]
+       },
+       camera: {
+         title: "📷 Camera Mode",
+         subtitle: "Take photos and record videos with gestures",
+         instructions: [
+           { icon: "✌️", text: "2 fingers = Take Photo" },
+           { icon: "🤟", text: "3 fingers = Start Recording" },
+           { icon: "☝️", text: "1 finger = Stop Recording" },
+           { icon: "💾", text: "Files saved automatically with timestamps" },
+           { icon: "📁", text: "Check your project folder for saved files" }
+         ]
+       },
+       websocket: {
+         title: "🔌 AI Server Mode",
+         subtitle: "Start the Python WebSocket server for AI detection",
+         instructions: [
+           { icon: "🐍", text: "Starts Python WebSocket server on localhost:8765" },
+           { icon: "🤖", text: "Enables AI-powered gesture detection for games" },
+           { icon: "📡", text: "Server runs in background for real-time processing" },
+           { icon: "🛑", text: "Click 'Stop AI Server' to close the server" },
+           { icon: "⚡", text: "Required for advanced gesture recognition features" }
+         ]
+       }
+     };
+
+    function navigateCarousel(direction) {
+      currentSlide = (currentSlide + direction + totalSlides) % totalSlides;
+      updateCarousel();
+    }
+
+    function goToSlide(slideIndex) {
+      currentSlide = slideIndex;
+      updateCarousel();
+    }
+
+    function updateCarousel() {
+      const cards = document.querySelectorAll('.mode-card');
+      const indicators = document.querySelectorAll('.indicator');
+      
+      cards.forEach((card, index) => {
+        card.classList.remove('active', 'prev', 'next', 'hidden');
+        
+        if (index === currentSlide) {
+          card.classList.add('active');
+        } else if (index === (currentSlide - 1 + totalSlides) % totalSlides) {
+          card.classList.add('prev');
+        } else if (index === (currentSlide + 1) % totalSlides) {
+          card.classList.add('next');
+        } else {
+          card.classList.add('hidden');
+        }
+      });
+      
+      indicators.forEach((indicator, index) => {
+        indicator.classList.toggle('active', index === currentSlide);
+      });
+    }
+
+    function selectMode(mode) {
+      console.log('Selecting mode:', mode);
+      pendingMode = mode;
+      showInstructionModal(mode);
+    }
+
+    function showInstructionModal(mode) {
+      const modal = document.getElementById('instructionModal');
+      const title = document.getElementById('instructionTitle');
+      const subtitle = document.getElementById('instructionSubtitle');
+      const list = document.getElementById('instructionList');
+      
+      const instructions = modeInstructions[mode];
+      if (!instructions) return;
+      
+      title.textContent = instructions.title;
+      subtitle.textContent = instructions.subtitle;
+      
+      // Clear and populate instruction list
+      list.innerHTML = '';
+      instructions.instructions.forEach(instruction => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+          <span class="instruction-icon">${instruction.icon}</span>
+          <span class="instruction-text">${instruction.text}</span>
+        `;
+        list.appendChild(li);
+      });
+      
+      modal.style.display = 'flex';
+    }
+
+    function closeInstructionModal() {
+      const modal = document.getElementById('instructionModal');
+      modal.style.display = 'none';
+      
+      // Start the mode after closing instructions
+      if (pendingMode) {
+        startMode(pendingMode);
+        pendingMode = null;
+      }
+    }
+
+    function startMode(mode) {
+      console.log('Starting mode:', mode);
+      
+      // Special handling for game mode - open the game directly
+      if (mode === 'game') {
+        window.open('/dino-game', '_blank');
+        showNotification('Opening Dino Game in new tab...', 'success');
+        updateUI('game');
+        return;
+      }
+      
+      // Special handling for websocket server
+      if (mode === 'websocket') {
+        fetch('/start-websocket-server', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        })
+        .then(res => res.json())
+        .then(data => {
+          showNotification(data.message, data.status);
+          if (data.status === 'success') {
+            updateUI('websocket');
+          } else {
+            // Even if server fails to start, show the UI for manual control
+            updateUI('websocket');
+          }
+        })
+        .catch(err => {
+          showNotification("Error: " + err, 'error');
+          // Show UI even if there's an error
+          updateUI('websocket');
+        });
+        return;
+      }
+      
+      fetch('/run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode })
+      })
+      .then(res => res.json())
+      .then(data => {
+        console.log('Mode response:', data);
+        showNotification(data.message, 'success');
+        updateUI(data.active);
+      })
+      .catch(err => {
+        console.error('Mode selection error:', err);
+        showNotification("Error: " + err, 'error');
+      });
+    }
+
+    function closeCurrentMode() {
+      if (!currentMode) return;
+      
+      // Special handling for websocket server
+      if (currentMode === 'websocket') {
+        fetch('/stop-websocket-server', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        })
+        .then(res => res.json())
+        .then(data => {
+          showNotification(data.message, 'info');
+          updateUI(null);
+        })
+        .catch(err => {
+          showNotification("Error: " + err, 'error');
+        });
+        return;
+      }
+      
+      fetch('/close', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode: currentMode })
+      })
+      .then(res => res.json())
+      .then(data => {
+        showNotification(data.message, 'info');
+        updateUI(null);
+      })
+      .catch(err => {
+        showNotification("Error: " + err, 'error');
+      });
+    }
+
+    function updateUI(activeMode) {
+      console.log('Updating UI for mode:', activeMode);
+      const closeBtn = document.getElementById('close-btn');
+      const gameOptions = document.getElementById('game-options');
+      
+      if (activeMode) {
+        console.log('Activating mode:', activeMode);
+        closeBtn.classList.add('visible');
+        currentMode = activeMode;
+        
+        // Update close button text based on mode
+        if (activeMode === 'websocket') {
+          closeBtn.textContent = '✖ Stop AI Server';
+        } else if (activeMode === 'game') {
+          closeBtn.textContent = '✖ Close Game Mode';
+        } else {
+          closeBtn.textContent = '✖ Close Mode';
+        }
+        
+        if (activeMode === 'game') {
+          console.log('Showing game options');
+          gameOptions.style.display = 'block';
+          // Add animation for game options
+          setTimeout(() => {
+            gameOptions.style.opacity = '1';
+            gameOptions.style.transform = 'translateY(0)';
+          }, 100);
+        } else {
+          console.log('Hiding game options');
+          gameOptions.style.display = 'none';
+          gameOptions.style.opacity = '0';
+          gameOptions.style.transform = 'translateY(20px)';
+        }
+      } else {
+        console.log('Deactivating all modes');
+        closeBtn.classList.remove('visible');
+        gameOptions.style.display = 'none';
+        gameOptions.style.opacity = '0';
+        gameOptions.style.transform = 'translateY(20px)';
+        currentMode = null;
+      }
+    }
+
+    function openDinoGame() {
+      window.open('/dino-game', '_blank');
+      showNotification('Opening Dino Fist Game (AI) in new tab...', 'info');
+    }
+
+    function openDinoGesture() {
+      window.open('/dino-gesture', '_blank');
+      showNotification('Opening Dino Gesture Game (Browser) in new tab...', 'info');
+    }
+
+
+
+    function startWebSocketServer() {
+      pendingMode = 'websocket';
+      showInstructionModal('websocket');
+    }
+
+    function showNotification(message, type = 'info') {
+      const notification = document.getElementById('notification');
+      notification.textContent = message;
+      notification.style.display = 'block';
+      
+      if (type === 'success') {
+        notification.style.borderLeftColor = '#4caf50';
+      } else if (type === 'error') {
+        notification.style.borderLeftColor = '#f44336';
+      } else {
+        notification.style.borderLeftColor = '#00bcd4';
+      }
+      
+      setTimeout(() => {
+        notification.style.display = 'none';
+      }, 3000);
+    }
+
+    // Keyboard navigation
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'ArrowLeft') {
+        navigateCarousel(-1);
+      } else if (e.key === 'ArrowRight') {
+        navigateCarousel(1);
+      }
+    });
+
+    // Touch/swipe support
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    document.addEventListener('touchstart', e => {
+      touchStartX = e.changedTouches[0].screenX;
+    });
+
+    document.addEventListener('touchend', e => {
+      touchEndX = e.changedTouches[0].screenX;
+      handleSwipe();
+    });
+
+    function handleSwipe() {
+      const swipeThreshold = 50;
+      const diff = touchStartX - touchEndX;
+      
+      if (Math.abs(diff) > swipeThreshold) {
+        if (diff > 0) {
+          navigateCarousel(1); // Swipe left
+        } else {
+          navigateCarousel(-1); // Swipe right
+        }
+      }
+    }
+
+    // Auto-rotate carousel (optional)
+    let autoRotateInterval;
+    
+    function startAutoRotate() {
+      autoRotateInterval = setInterval(() => {
+        if (!currentMode) { // Only auto-rotate when no mode is active
+          navigateCarousel(1);
+        }
+      }, 5000);
+    }
+
+    function stopAutoRotate() {
+      clearInterval(autoRotateInterval);
+    }
+
+    // Check for active mode on page load
+    window.onload = function() {
+      fetch('/status')
+        .then(res => res.json())
+        .then(data => {
+          if (data.active) {
+            updateUI(data.active);
+          }
+        })
+        .catch(err => console.log('Could not fetch status'));
+      
+      // Start auto-rotation
+      startAutoRotate();
+    };
+
+         // Pause auto-rotation on hover
+     document.querySelector('.carousel-container').addEventListener('mouseenter', stopAutoRotate);
+     document.querySelector('.carousel-container').addEventListener('mouseleave', startAutoRotate);
+
+     // Close instruction modal when clicking outside
+     document.getElementById('instructionModal').addEventListener('click', function(e) {
+       if (e.target === this) {
+         closeInstructionModal();
+       }
+     });
+  </script>
+</body>
+</html>

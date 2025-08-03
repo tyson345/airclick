@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🦕 Dino Gesture Game - Point to Jump!</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #87CEEB 0%, #98FB98 50%, #F0E68C 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            color: #2E8B57;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .game-area {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .canvas-section {
+            position: relative;
+        }
+
+        #gameCanvas {
+            border: 4px solid #2E8B57;
+            border-radius: 15px;
+            background: linear-gradient(to bottom, #87CEEB 0%, #F0E68C 70%, #8B4513 100%);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .game-info {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(46, 139, 87, 0.9);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .gesture-info {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 69, 0, 0.9);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        .controls-panel {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+            padding: 20px;
+            width: 350px;
+            border: 2px solid #dee2e6;
+        }
+
+        .camera-section h3 {
+            color: #2E8B57;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .camera-container {
+            position: relative;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        #videoElement {
+            width: 100%;
+            height: 200px;
+            border: 3px solid #2E8B57;
+            border-radius: 10px;
+            transform: scaleX(-1);
+            object-fit: cover;
+        }
+
+        #gestureCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 200px;
+            border-radius: 10px;
+            transform: scaleX(-1);
+            pointer-events: none;
+        }
+
+        .gesture-status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 12px;
+            background: linear-gradient(45deg, #ffffff, #f8f9fa);
+            border-radius: 10px;
+            border: 2px solid #dee2e6;
+        }
+
+        .status-indicator {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+        }
+
+        .status-pointing {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            animation: pulse 0.8s infinite alternate;
+            box-shadow: 0 0 15px rgba(40, 167, 69, 0.6);
+        }
+
+        .status-open {
+            background: linear-gradient(45deg, #007bff, #6610f2);
+            color: white;
+        }
+
+        .status-none {
+            background: linear-gradient(45deg, #6c757d, #495057);
+            color: white;
+        }
+
+        @keyframes pulse {
+            from { transform: scale(1); box-shadow: 0 0 10px rgba(40, 167, 69, 0.5); }
+            to { transform: scale(1.05); box-shadow: 0 0 20px rgba(40, 167, 69, 0.8); }
+        }
+
+        .instructions {
+            background: linear-gradient(45deg, #fff3cd, #ffeaa7);
+            border: 2px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .instructions h4 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .instructions p {
+            color: #856404;
+            margin: 5px 0;
+            font-size: 0.9rem;
+        }
+
+        .button {
+            background: linear-gradient(45deg, #2E8B57, #3CB371);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(46, 139, 87, 0.3);
+        }
+
+        .button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .debug-info {
+            background: #343a40;
+            color: #ffffff;
+            border-radius: 10px;
+            padding: 10px;
+            margin-top: 15px;
+            font-size: 0.8rem;
+            font-family: 'Courier New', monospace;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+
+        .game-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 15px;
+        }
+
+        .overlay-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .overlay-content h2 {
+            color: #2E8B57;
+            margin-bottom: 15px;
+            font-size: 2rem;
+        }
+
+        .overlay-content p {
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-item {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2E8B57;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #666;
+            text-transform: uppercase;
+        }
+
+        .sensitivity-controls {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .sensitivity-controls h4 {
+            color: #2E8B57;
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+
+        .slider-container {
+            margin-bottom: 10px;
+        }
+
+        .slider-container label {
+            display: block;
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .slider {
+            width: 100%;
+            height: 5px;
+            border-radius: 5px;
+            background: #ddd;
+            outline: none;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #2E8B57;
+            cursor: pointer;
+        }
+
+        .pointing-indicator {
+            background: linear-gradient(45deg, #dc3545, #fd7e14);
+            color: white;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-weight: bold;
+            display: none;
+        }
+
+        .pointing-indicator.active {
+            display: block;
+            animation: pointPulse 0.5s infinite alternate;
+        }
+
+        @keyframes pointPulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.02); }
+        }
+
+        .test-jump {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 15px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .test-jump:hover {
+            transform: translateY(-1px);
+        }
+
+        @media (max-width: 768px) {
+            .game-area {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .controls-panel {
+                width: 100%;
+                max-width: 400px;
+            }
+            
+            #gameCanvas {
+                width: 100%;
+                max-width: 600px;
+                height: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1>🦕 Dino Gesture Game</h1>
+            <p>Point with your INDEX FINGER to jump over obstacles!</p>
+        </div>
+
+        <div class="game-area">
+            <div class="canvas-section">
+                <canvas id="gameCanvas" width="800" height="400"></canvas>
+                
+                <div class="game-info" id="gameInfo">
+                    Score: 0 | Speed: 1x
+                </div>
+                
+                <div class="gesture-info" id="gestureInfo">
+                    Gesture: None
+                </div>
+
+                <!-- Start Game Overlay -->
+                <div class="game-overlay" id="startOverlay">
+                    <div class="overlay-content">
+                        <h2>🚀 Ready to Play?</h2>
+                        <p>Enable your camera and POINT with your index finger to jump!</p>
+                        <button class="button" onclick="startGame()">Start Game</button>
+                    </div>
+                </div>
+
+                <!-- Game Over Overlay -->
+                <div class="game-overlay" id="gameOverOverlay" style="display: none;">
+                    <div class="overlay-content">
+                        <h2>💥 Game Over!</h2>
+                        <div class="stats">
+                            <div class="stat-item">
+                                <div class="stat-value" id="finalScore">0</div>
+                                <div class="stat-label">Score</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="finalTime">0s</div>
+                                <div class="stat-label">Time</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="finalJumps">0</div>
+                                <div class="stat-label">Jumps</div>
+                            </div>
+                        </div>
+                        <button class="button" onclick="restartGame()">Play Again</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="controls-panel">
+                <div class="camera-section">
+                    <h3>📷 Camera Control</h3>
+                    
+                    <div id="cameraPrompt">
+                        <p style="text-align: center; margin-bottom: 15px; color: #666;">
+                            Enable camera to start gesture control
+                        </p>
+                        <button class="button" onclick="enableCamera()">Enable Camera</button>
+                    </div>
+
+                    <div id="cameraActive" style="display: none;">
+                        <div class="camera-container">
+                            <video id="videoElement" autoplay muted playsinline></video>
+                            <canvas id="gestureCanvas"></canvas>
+                        </div>
+
+                        <div class="pointing-indicator" id="pointingIndicator">
+                            👆 INDEX FINGER DETECTED - JUMPING!
+                        </div>
+
+                        <div class="gesture-status">
+                            <span style="font-weight: bold;">Status:</span>
+                            <div class="status-indicator status-none" id="gestureStatus">
+                                No Hand
+                            </div>
+                        </div>
+
+                        <button class="test-jump" onclick="testJump()">🦕 Test Jump (Click)</button>
+
+                        <div class="sensitivity-controls">
+                            <h4>🎛️ Detection Settings:</h4>
+                            <div class="slider-container">
+                                <label for="skinThreshold">Skin Detection:</label>
+                                <input type="range" id="skinThreshold" class="slider" min="60" max="120" value="85">
+                            </div>
+                            <div class="slider-container">
+                                <label for="pointingSensitivity">Pointing Sensitivity:</label>
+                                <input type="range" id="pointingSensitivity" class="slider" min="2" max="8" value="4">
+                            </div>
+                            <div class="slider-container">
+                                <label for="jumpDelay">Jump Delay (ms):</label>
+                                <input type="range" id="jumpDelay" class="slider" min="200" max="800" step="100" value="300">
+                                <span id="delayValue">300ms</span>
+                            </div>
+                        </div>
+
+                        <div class="instructions">
+                            <h4>🎮 How to Play & Debug:</h4>
+                            <p>👆 <strong>Point INDEX FINGER UP</strong> - you should see RED PIXELS on your hand</p>
+                            <p>🖐️ <strong>Show OPEN PALM</strong> - also triggers jump!</p>
+                            <p>✌️ <strong>Show PEACE SIGN (2 fingers up)</strong> - also triggers jump!</p>
+                            <p>🔴 <strong>RED PIXELS = SKIN DETECTED</strong> - if no red, adjust lighting</p>
+                            <p>🟢 <strong>GREEN BOX = HAND DETECTED</strong> - shows detected hand area</p>
+                            <p>🔴 <strong>RED BOX + ARROW = FINGER DETECTED</strong> - ready to jump!</p>
+                            <p>💡 Try: Better lighting, move closer, plain background</p>
+                            <p>🎛️ Lower "Skin Detection" slider if no red pixels appear</p>
+                            <p>🧪 Use "Test Jump" to check game works</p>
+                        </div>
+
+                        <div class="debug-info" id="debugInfo">
+                            Initializing gesture detection...
+                        </div>
+                    </div>
+
+                    <div id="cameraError" style="display: none; text-align: center; color: #dc3545; padding: 15px;">
+                        <p><strong>Camera Error</strong></p>
+                        <p>Please allow camera access to play</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game State
+        const gameState = {
+            isPlaying: false,
+            gameOver: false,
+            score: 0,
+            speed: 5,
+            baseSpeed: 5,
+            startTime: 0,
+            totalJumps: 0,
+            dino: {
+                x: 100,
+                y: 300,
+                width: 60,
+                height: 80,
+                velocityY: 0,
+                isJumping: false,
+                animFrame: 0
+            },
+            obstacles: [],
+            particles: [],
+            clouds: [],
+            groundY: 350,
+            gravity: 0.8,
+            jumpPower: -15
+        };
+
+        // Index Finger Gesture Detection State
+        const gestureState = {
+            isEnabled: false,
+            lastJumpTime: 0,
+            jumpCooldown: 100,
+            debugMessages: [],
+            handDetected: false,
+            isPointing: false,
+            isOpenPalm: false,
+            isPeaceSign: false, // new gesture
+            skinThreshold: 85,
+            pointingSensitivity: 4,
+            detectionCanvas: null,
+            detectionCtx: null,
+        };
+
+        // Canvas Setup
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const gestureCanvas = document.getElementById('gestureCanvas');
+        const gestureCtx = gestureCanvas.getContext('2d');
+
+        // Initialize detection canvas
+        function initDetectionCanvas() {
+            gestureState.detectionCanvas = document.createElement('canvas');
+            gestureState.detectionCtx = gestureState.detectionCanvas.getContext('2d');
+            gestureState.detectionCanvas.width = 80;
+            gestureState.detectionCanvas.height = 60;
+        }
+
+        // Initialize clouds for background
+        function initClouds() {
+            gameState.clouds = [];
+            for (let i = 0; i < 5; i++) {
+                gameState.clouds.push({
+                    x: Math.random() * 1000,
+                    y: 50 + Math.random() * 100,
+                    size: 30 + Math.random() * 20,
+                    speed: 0.5 + Math.random() * 1
+                });
+            }
+        }
+
+        // Draw animated dino
+        function drawDino() {
+            const dino = gameState.dino;
+            
+            ctx.save();
+            ctx.translate(dino.x + dino.width/2, dino.y + dino.height/2);
+            
+            // Body
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(-25, -30, 50, 60);
+            
+            // Head
+            ctx.fillStyle = '#A0522D';
+            ctx.beginPath();
+            ctx.arc(0, -45, 25, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Eyes
+            const eyeOffset = Math.sin(dino.animFrame * 0.1) > 0.9 ? 0 : 8;
+            ctx.fillStyle = '#000';
+            ctx.fillRect(-12, -50, 6, eyeOffset || 8);
+            ctx.fillRect(6, -50, 6, eyeOffset || 8);
+            
+            // Eye shine
+            if (eyeOffset) {
+                ctx.fillStyle = '#FFF';
+                ctx.fillRect(-10, -48, 2, 2);
+                ctx.fillRect(8, -48, 2, 2);
+            }
+            
+            // Mouth
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(0, -35, 6, 0, Math.PI);
+            ctx.stroke();
+            
+            // Arms
+            const armSwing = Math.sin(dino.animFrame * 0.3) * 10;
+            ctx.strokeStyle = '#654321';
+            ctx.lineWidth = 8;
+            ctx.lineCap = 'round';
+            
+            ctx.beginPath();
+            ctx.moveTo(-25, -10);
+            ctx.lineTo(-35 + armSwing, 15);
+            ctx.moveTo(25, -10);
+            ctx.lineTo(35 - armSwing, 15);
+            ctx.stroke();
+            
+            // Legs
+            const legSwing = dino.isJumping ? 20 : Math.sin(dino.animFrame * 0.4) * 15;
+            ctx.beginPath();
+            ctx.moveTo(-15, 30);
+            ctx.lineTo(-20 + legSwing, 55);
+            ctx.moveTo(15, 30);
+            ctx.lineTo(20 - legSwing, 55);
+            ctx.stroke();
+            
+            // Feet
+            ctx.fillStyle = '#654321';
+            ctx.fillRect(-25 + legSwing, 55, 12, 8);
+            ctx.fillRect(13 - legSwing, 55, 12, 8);
+            
+            ctx.restore();
+        }
+
+        // Create obstacle
+        function createObstacle() {
+            return {
+                x: canvas.width,
+                y: gameState.groundY - 60,
+                width: 30,
+                height: 60,
+                passed: false
+            };
+        }
+
+        // Draw obstacle (cactus)
+        function drawObstacle(obstacle) {
+            ctx.fillStyle = '#228B22';
+            
+            // Main trunk
+            ctx.fillRect(obstacle.x + 10, obstacle.y, 10, obstacle.height);
+            
+            // Arms
+            ctx.fillRect(obstacle.x, obstacle.y + 15, 20, 8);
+            ctx.fillRect(obstacle.x + 5, obstacle.y + 5, 8, 20);
+            ctx.fillRect(obstacle.x + 15, obstacle.y + 30, 15, 8);
+            
+            // Spikes
+            ctx.fillStyle = '#006400';
+            for (let i = 0; i < obstacle.height; i += 10) {
+                ctx.fillRect(obstacle.x + 8, obstacle.y + i, 2, 4);
+                ctx.fillRect(obstacle.x + 12, obstacle.y + i + 5, 2, 4);
+                ctx.fillRect(obstacle.x + 16, obstacle.y + i, 2, 4);
+                ctx.fillRect(obstacle.x + 20, obstacle.y + i + 5, 2, 4);
+            }
+        }
+
+        // Create particles
+        function createParticles(x, y, count = 10) {
+            for (let i = 0; i < count; i++) {
+                gameState.particles.push({
+                    x: x + Math.random() * 20 - 10,
+                    y: y + Math.random() * 20 - 10,
+                    vx: (Math.random() - 0.5) * 8,
+                    vy: (Math.random() - 0.5) * 8 - 2,
+                    life: 30,
+                    maxLife: 30,
+                    size: 2 + Math.random() * 3,
+                    color: `hsl(${30 + Math.random() * 60}, 70%, 60%)`
+                });
+            }
+        }
+
+        // Update and draw particles
+        function updateParticles() {
+            gameState.particles = gameState.particles.filter(particle => {
+                particle.x += particle.vx;
+                particle.y += particle.vy;
+                particle.vy += 0.2;
+                particle.life--;
+                
+                const alpha = particle.life / particle.maxLife;
+                ctx.save();
+                ctx.globalAlpha = alpha;
+                ctx.fillStyle = particle.color;
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+                
+                return particle.life > 0;
+            });
+        }
+
+        // Draw background
+        function drawBackground() {
+            // Sky gradient
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#87CEEB');
+            gradient.addColorStop(0.7, '#F0E68C');
+            gradient.addColorStop(1, '#8B4513');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Clouds
+            gameState.clouds.forEach(cloud => {
+                cloud.x -= cloud.speed;
+                if (cloud.x < -cloud.size) {
+                    cloud.x = canvas.width + cloud.size;
+                }
+                
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                ctx.beginPath();
+                ctx.arc(cloud.x, cloud.y, cloud.size, 0, Math.PI * 2);
+                ctx.arc(cloud.x + cloud.size * 0.5, cloud.y, cloud.size * 0.7, 0, Math.PI * 2);
+                ctx.arc(cloud.x - cloud.size * 0.5, cloud.y, cloud.size * 0.7, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            
+            // Ground
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(0, gameState.groundY, canvas.width, canvas.height - gameState.groundY);
+            
+            // Grass
+            ctx.strokeStyle = '#228B22';
+            ctx.lineWidth = 2;
+            for (let i = 0; i < canvas.width; i += 10) {
+                const height = 8 + Math.sin(i * 0.1) * 3;
+                ctx.beginPath();
+                ctx.moveTo(i, gameState.groundY);
+                ctx.lineTo(i + 1, gameState.groundY - height);
+                ctx.lineTo(i + 3, gameState.groundY);
+                ctx.stroke();
+            }
+        }
+
+        // ULTRA SIMPLE index finger, open palm, and peace sign detection algorithm
+function detectGesture() {
+    const video = document.getElementById('videoElement');
+    if (!video || video.paused || video.ended || !gestureState.detectionCanvas) return;
+    
+    try {
+        gestureState.skinThreshold = parseInt(document.getElementById('skinThreshold').value);
+        gestureState.jumpCooldown = parseInt(document.getElementById('jumpDelay').value);
+
+        gestureState.detectionCtx.drawImage(video, 0, 0, 80, 60);
+        const imageData = gestureState.detectionCtx.getImageData(0, 0, 80, 60);
+        const data = imageData.data;
+
+        gestureCtx.clearRect(0, 0, gestureCanvas.width, gestureCanvas.height);
+
+        let skinPixels = [];
+        const scaleX = gestureCanvas.width / 80;
+        const scaleY = gestureCanvas.height / 60;
+
+        for (let i = 0; i < data.length; i += 4) {
+          const pixelIndex = i / 4;
+          const x = pixelIndex % 80;
+          const y = Math.floor(pixelIndex / 80);
+
+          const r = data[i];
+          const g = data[i + 1];
+          const b = data[i + 2];
+
+          const isSkin1 = (r > 80 && g > 30 && b > 20 && r > g && r > b);
+          const isSkin2 = (r > 100 && g > 50 && b > 30 && (r - g) > 10);
+          const isSkin3 = (r > 120 && g > 60 && b > 40);
+
+          if (isSkin1 || isSkin2 || isSkin3) {
+            skinPixels.push({ x, y });
+            gestureCtx.fillStyle = 'rgba(255, 0, 0, 0.6)';
+            gestureCtx.fillRect(x * scaleX, y * scaleY, scaleX, scaleY);
+          }
+        }
+
+        const skinPixelCount = skinPixels.length;
+        gestureState.handDetected = skinPixelCount > 20;
+
+        gestureState.isPointing = false;
+        gestureState.isOpenPalm = false;
+        gestureState.isPeaceSign = false;
+
+        if (gestureState.handDetected && skinPixels.length > 0) {
+          const xs = skinPixels.map(p => p.x);
+          const ys = skinPixels.map(p => p.y);
+          const minX = Math.min(...xs);
+          const maxX = Math.max(...xs);
+          const minY = Math.min(...ys);
+          const maxY = Math.max(...ys);
+
+          const handWidth = maxX - minX;
+          const handHeight = maxY - minY;
+
+          gestureCtx.strokeStyle = '#00ff00';
+          gestureCtx.lineWidth = 2;
+          gestureCtx.strokeRect(minX * scaleX, minY * scaleY, handWidth * scaleX, handHeight * scaleY);
+
+          // Pointing detection (index finger up)
+          const topThreshold = minY + handHeight * 0.3;
+          const topPixels = skinPixels.filter(p => p.y <= topThreshold);
+          const hasTopPixels = topPixels.length > 5;
+          const isTallEnough = handHeight > 20;
+          const isNotTooWide = handWidth < 50;
+          gestureState.isPointing = hasTopPixels && isTallEnough && isNotTooWide;
+
+          // Open palm detection (hand is wide and tall, many skin pixels)
+          const isWideEnough = handWidth > 35;
+          const isPalmTallEnough = handHeight > 25;
+          gestureState.isOpenPalm = isWideEnough && isPalmTallEnough && skinPixelCount > 80;
+
+          // Peace sign detection (two fingers up, rest down)
+          // Estimate: two clusters of skin pixels at top, separated horizontally
+          // Simple: count clusters in top 30% width-wise
+          const peaceTopPixels = skinPixels.filter(p => p.y <= topThreshold);
+          let peaceClusters = 0;
+          if (peaceTopPixels.length > 10) {
+            // Divide top area into left/right halves
+            const leftTop = peaceTopPixels.filter(p => p.x < minX + handWidth * 0.5);
+            const rightTop = peaceTopPixels.filter(p => p.x >= minX + handWidth * 0.5);
+            if (leftTop.length > 3 && rightTop.length > 3) {
+              peaceClusters = 2;
+            }
+          }
+          gestureState.isPeaceSign = peaceClusters === 2 && isTallEnough && handWidth < 50;
+
+          // Draw for peace sign
+          if (gestureState.isPeaceSign) {
+            gestureCtx.strokeStyle = '#ff69b4';
+            gestureCtx.lineWidth = 4;
+            gestureCtx.strokeRect(minX * scaleX, minY * scaleY, handWidth * scaleX, handHeight * scaleY);
+            gestureCtx.font = 'bold 16px Arial';
+            gestureCtx.fillStyle = 'rgba(255,105,180,0.7)';
+            gestureCtx.fillRect(minX * scaleX, minY * scaleY - 25, 120, 20);
+            gestureCtx.fillStyle = 'white';
+            gestureCtx.fillText('✌️ PEACE SIGN!', minX * scaleX + 5, minY * scaleY - 10);
+          }
+
+          // Draw for open palm
+          if (gestureState.isOpenPalm) {
+            gestureCtx.strokeStyle = '#00ffff';
+            gestureCtx.lineWidth = 4;
+            gestureCtx.strokeRect(minX * scaleX, minY * scaleY, handWidth * scaleX, handHeight * scaleY);
+            gestureCtx.font = 'bold 16px Arial';
+            gestureCtx.fillStyle = 'rgba(0,255,255,0.7)';
+            gestureCtx.fillRect(minX * scaleX, minY * scaleY - 25, 120, 20);
+            gestureCtx.fillStyle = 'white';
+            gestureCtx.fillText('🖐️ OPEN PALM!', minX * scaleX + 5, minY * scaleY - 10);
+          }
+
+          // Draw for pointing
+          if (gestureState.isPointing) {
+            gestureCtx.strokeStyle = '#ff0000';
+            gestureCtx.lineWidth = 3;
+            gestureCtx.strokeRect(minX * scaleX, minY * scaleY, handWidth * scaleX, handHeight * scaleY);
+            const centerX = (minX + handWidth/2) * scaleX;
+            const topY = minY * scaleY;
+            gestureCtx.beginPath();
+            gestureCtx.moveTo(centerX, topY);
+            gestureCtx.lineTo(centerX, topY - 20);
+            gestureCtx.moveTo(centerX - 10, topY - 10);
+            gestureCtx.lineTo(centerX, topY - 20);
+            gestureCtx.lineTo(centerX + 10, topY - 10);
+            gestureCtx.stroke();
+          }
+
+          updateDebugInfo(
+            `Skin pixels: ${skinPixelCount} | Size: ${handWidth}x${handHeight} | Top pixels: ${topPixels.length} | ` +
+            `Pointing: ${gestureState.isPointing ? 'YES' : 'NO'} | OpenPalm: ${gestureState.isOpenPalm ? 'YES' : 'NO'} | PeaceSign: ${gestureState.isPeaceSign ? 'YES' : 'NO'}`
+          );
+        } else {
+          updateDebugInfo(`No hand detected | Skin pixels: ${skinPixelCount} (need >20) | Try better lighting or move closer`);
+        }
+
+        updateGestureStatus();
+
+        // TRIGGER JUMP when any gesture detected
+        if ((gestureState.isPointing || gestureState.isOpenPalm || gestureState.isPeaceSign) && gameState.isPlaying) {
+          const now = Date.now();
+          if (now - gestureState.lastJumpTime > gestureState.jumpCooldown) {
+            jump();
+            gestureState.lastJumpTime = now;
+            updateDebugInfo(
+              gestureState.isPointing
+                ? '🦕 INDEX FINGER JUMP TRIGGERED!'
+                : gestureState.isOpenPalm
+                  ? '🦕 OPEN PALM JUMP TRIGGERED!'
+                  : '🦕 PEACE SIGN JUMP TRIGGERED!'
+            );
+          }
+        }
+
+      } catch (error) {
+        updateDebugInfo(`Detection Error: ${error.message}`);
+        console.error('Gesture detection error:', error);
+      }
+    }
+
+        // Draw hand detection overlay
+        function drawHandDetection(x, y, width, height, isPointing) {
+            gestureCtx.clearRect(0, 0, gestureCanvas.width, gestureCanvas.height);
+            
+            // Scale coordinates to canvas size
+            const scaleX = gestureCanvas.width / 80;
+            const scaleY = gestureCanvas.height / 60;
+            
+            const scaledX = x * scaleX;
+            const scaledY = y * scaleY;
+            const scaledWidth = width * scaleX;
+            const scaledHeight = height * scaleY;
+            
+            // Draw bounding box
+            gestureCtx.strokeStyle = isPointing ? '#ff0000' : '#00ff00';
+            gestureCtx.lineWidth = isPointing ? 6 : 3;
+            gestureCtx.setLineDash(isPointing ? [10, 5] : []);
+            gestureCtx.strokeRect(scaledX, scaledY, scaledWidth, scaledHeight);
+            
+            // Draw center point
+            gestureCtx.fillStyle = isPointing ? '#ff0000' : '#00ff00';
+            gestureCtx.beginPath();
+            gestureCtx.arc(scaledX + scaledWidth/2, scaledY + scaledHeight/2, isPointing ? 15 : 10, 0, Math.PI * 2);
+            gestureCtx.fill();
+            
+            // Draw pointing indicator
+            if (isPointing) {
+                // Draw arrow pointing up
+                gestureCtx.strokeStyle = '#ff0000';
+                gestureCtx.lineWidth = 4;
+                gestureCtx.beginPath();
+                gestureCtx.moveTo(scaledX + scaledWidth/2, scaledY + scaledHeight/2);
+                gestureCtx.lineTo(scaledX + scaledWidth/2, scaledY - 20);
+                gestureCtx.moveTo(scaledX + scaledWidth/2 - 10, scaledY - 10);
+                gestureCtx.lineTo(scaledX + scaledWidth/2, scaledY - 20);
+                gestureCtx.lineTo(scaledX + scaledWidth/2 + 10, scaledY - 10);
+                gestureCtx.stroke();
+            }
+            
+            // Draw label
+            const label = isPointing ? '👉 POINTING!' : '✋ HAND';
+            gestureCtx.font = 'bold 16px Arial';
+            const textWidth = gestureCtx.measureText(label).width;
+            
+            // Background for text
+            gestureCtx.fillStyle = isPointing ? 'rgba(255, 0, 0, 0.9)' : 'rgba(0, 255, 0, 0.7)';
+            gestureCtx.fillRect(scaledX, scaledY - 25, textWidth + 10, 20);
+            
+            // Text
+            gestureCtx.fillStyle = 'white';
+            gestureCtx.fillText(label, scaledX + 5, scaledY - 10);
+            
+            gestureCtx.setLineDash([]);
+        }
+
+        // Clear hand detection overlay
+        function clearHandDetection() {
+            gestureCtx.clearRect(0, 0, gestureCanvas.width, gestureCanvas.height);
+        }
+
+        // Update gesture status display
+        function updateGestureStatus() {
+            const statusElement = document.getElementById('gestureStatus');
+            const gestureInfo = document.getElementById('gestureInfo');
+            const pointingIndicator = document.getElementById('pointingIndicator');
+
+            statusElement.className = 'status-indicator';
+
+            if (gestureState.isPointing) {
+                statusElement.className += ' status-pointing';
+                statusElement.textContent = '👆 INDEX FINGER DETECTED!';
+                gestureInfo.textContent = 'Gesture: INDEX FINGER POINTING - READY TO JUMP!';
+                pointingIndicator.className = 'pointing-indicator active';
+            } else if (gestureState.isOpenPalm) {
+                statusElement.className += ' status-pointing';
+                statusElement.textContent = '🖐️ OPEN PALM DETECTED!';
+                gestureInfo.textContent = 'Gesture: OPEN PALM - READY TO JUMP!';
+                pointingIndicator.className = 'pointing-indicator active';
+            } else if (gestureState.isPeaceSign) {
+                statusElement.className += ' status-pointing';
+                statusElement.textContent = '✌️ PEACE SIGN DETECTED!';
+                gestureInfo.textContent = 'Gesture: PEACE SIGN (2 fingers up) - READY TO JUMP!';
+                pointingIndicator.className = 'pointing-indicator active';
+            } else if (gestureState.handDetected) {
+                statusElement.className += ' status-open';
+                statusElement.textContent = '✋ Hand Detected (No Jump Gesture)';
+                gestureInfo.textContent = 'Gesture: Hand Visible - Point Index Finger Up, Show Open Palm, or Peace Sign';
+                pointingIndicator.className = 'pointing-indicator';
+            } else {
+                statusElement.className += ' status-none';
+                statusElement.textContent = '❌ No Hand Detected';
+                gestureInfo.textContent = 'Gesture: None - Show Your Hand';
+                pointingIndicator.className = 'pointing-indicator';
+            }
+        }
+
+        // Update debug information
+        function updateDebugInfo(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            gestureState.debugMessages.unshift(`${timestamp}: ${message}`);
+            if (gestureState.debugMessages.length > 6) {
+                gestureState.debugMessages.pop();
+            }
+            
+            const debugElement = document.getElementById('debugInfo');
+            if (debugElement) {
+                debugElement.textContent = gestureState.debugMessages.join('\n');
+            }
+        }
+
+        // Test jump function for debugging
+        function testJump() {
+            if (gameState.isPlaying) {
+                jump();
+                updateDebugInfo('🧪 Test jump executed!');
+            } else {
+                updateDebugInfo('Start game first to test jump!');
+            }
+        }
+
+        // Enable camera
+        async function enableCamera() {
+            try {
+                updateDebugInfo('Requesting camera access...');
+                
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { 
+                        width: { ideal: 320, min: 160 },
+                        height: { ideal: 240, min: 120 },
+                        facingMode: 'user',
+                        frameRate: { ideal: 15, min: 10 }
+                    }
+                });
+
+                const video = document.getElementById('videoElement');
+                video.srcObject = stream;
+                
+                video.onloadedmetadata = () => {
+                    updateDebugInfo('Video loaded, starting detection...');
+                    
+                    video.play().then(() => {
+                        // Initialize detection canvas
+                        initDetectionCanvas();
+                        
+                        // Set gesture canvas size
+                        const rect = video.getBoundingClientRect();
+                        gestureCanvas.width = rect.width;
+                        gestureCanvas.height = rect.height;
+                        
+                        gestureState.isEnabled = true;
+                        document.getElementById('cameraPrompt').style.display = 'none';
+                        document.getElementById('cameraActive').style.display = 'block';
+                        
+                        updateDebugInfo('Camera enabled - Index finger detection active!');
+                        
+                        // Start gesture detection at 10 FPS
+                        setInterval(detectGesture, 100);
+                        
+                        // Add event listeners
+                        document.getElementById('skinThreshold').addEventListener('input', (e) => {
+                            gestureState.skinThreshold = parseInt(e.target.value);
+                            updateDebugInfo(`Skin threshold: ${e.target.value}`);
+                        });
+                        
+                        document.getElementById('pointingSensitivity').addEventListener('input', (e) => {
+                            gestureState.pointingSensitivity = parseInt(e.target.value);
+                            updateDebugInfo(`Pointing sensitivity: ${e.target.value}`);
+                        });
+                        
+                        document.getElementById('jumpDelay').addEventListener('input', (e) => {
+                            gestureState.jumpCooldown = parseInt(e.target.value);
+                            document.getElementById('delayValue').textContent = `${e.target.value}ms`;
+                            updateDebugInfo(`Jump delay: ${e.target.value}ms`);
+                        });
+                        
+                    }).catch(error => {
+                        updateDebugInfo(`Video play error: ${error.message}`);
+                    });
+                };
+
+            } catch (error) {
+                console.error('Camera error:', error);
+                document.getElementById('cameraPrompt').style.display = 'none';
+                document.getElementById('cameraError').style.display = 'block';
+                updateDebugInfo(`Camera error: ${error.message}`);
+            }
+        }
+
+        // Jump function
+        function jump() {
+            if (!gameState.dino.isJumping) {
+                gameState.dino.velocityY = gameState.jumpPower;
+                gameState.dino.isJumping = true;
+                gameState.totalJumps++;
+                
+                // Create jump particles
+                createParticles(gameState.dino.x + gameState.dino.width/2, gameState.dino.y + gameState.dino.height);
+            }
+        }
+
+        // Game loop
+        function gameLoop() {
+            if (!gameState.isPlaying) return;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw background
+            drawBackground();
+            
+            // Update dino physics
+            if (gameState.dino.isJumping) {
+                gameState.dino.velocityY += gameState.gravity;
+                gameState.dino.y += gameState.dino.velocityY;
+                
+                if (gameState.dino.y >= gameState.groundY - gameState.dino.height) {
+                    gameState.dino.y = gameState.groundY - gameState.dino.height;
+                    gameState.dino.velocityY = 0;
+                    gameState.dino.isJumping = false;
+                    
+                    // Landing particles
+                    createParticles(gameState.dino.x + gameState.dino.width/2, gameState.dino.y + gameState.dino.height, 5);
+                }
+            }
+            
+            // Update animation frame
+            gameState.dino.animFrame += 0.2;
+            
+            // Spawn obstacles
+            if (gameState.obstacles.length === 0 || gameState.obstacles[gameState.obstacles.length - 1].x < canvas.width - 300) {
+                if (Math.random() < 0.02) {
+                    gameState.obstacles.push(createObstacle());
+                }
+            }
+            
+            // Update obstacles
+            gameState.obstacles = gameState.obstacles.filter(obstacle => {
+                obstacle.x -= gameState.speed;
+                
+                // Check if passed
+                if (!obstacle.passed && obstacle.x + obstacle.width < gameState.dino.x) {
+                    obstacle.passed = true;
+                    gameState.score++;
+                    gameState.speed = gameState.baseSpeed + (gameState.score * 0.1);
+                }
+                
+                return obstacle.x > -obstacle.width;
+            });
+            
+            // Collision detection
+            for (let obstacle of gameState.obstacles) {
+                if (gameState.dino.x < obstacle.x + obstacle.width &&
+                    gameState.dino.x + gameState.dino.width > obstacle.x &&
+                    gameState.dino.y < obstacle.y + obstacle.height &&
+                    gameState.dino.y + gameState.dino.height > obstacle.y) {
+                    
+                    // Game over
+                    gameOver();
+                    return;
+                }
+            }
+            
+            // Draw everything
+            drawDino();
+            gameState.obstacles.forEach(drawObstacle);
+            updateParticles();
+            
+            // Update UI
+            const gameInfo = document.getElementById('gameInfo');
+            gameInfo.textContent = `Score: ${gameState.score} | Speed: ${gameState.speed.toFixed(1)}x`;
+            
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Start game
+        function startGame() {
+            if (!gestureState.isEnabled) {
+                alert('Please enable camera first!');
+                return;
+            }
+            
+            // Reset game state
+            gameState.isPlaying = true;
+            gameState.gameOver = false;
+            gameState.score = 0;
+            gameState.speed = gameState.baseSpeed;
+            gameState.startTime = Date.now();
+            gameState.totalJumps = 0;
+            
+            gameState.dino.y = gameState.groundY - gameState.dino.height;
+            gameState.dino.velocityY = 0;
+            gameState.dino.isJumping = false;
+            gameState.dino.animFrame = 0;
+            
+            gameState.obstacles = [];
+            gameState.particles = [];
+            
+            // Reset gesture timing
+            gestureState.lastJumpTime = 0;
+            gestureState.isPointing = false;
+            gestureState.isOpenPalm = false;
+            
+            // Hide start overlay
+            document.getElementById('startOverlay').style.display = 'none';
+            
+            // Initialize and start game loop
+            initClouds();
+            gameLoop();
+            
+            updateDebugInfo('🎮 Game started! Point with your index finger to jump!');
+        }
+
+        // Game over
+        function gameOver() {
+            gameState.isPlaying = false;
+            gameState.gameOver = true;
+            
+            // Create explosion particles
+            createParticles(gameState.dino.x + gameState.dino.width/2, gameState.dino.y + gameState.dino.height/2, 20);
+            
+            // Calculate stats
+            const survivalTime = Math.floor((Date.now() - gameState.startTime) / 1000);
+            
+            // Update game over screen
+            document.getElementById('finalScore').textContent = gameState.score;
+            document.getElementById('finalTime').textContent = `${survivalTime}s`;
+            document.getElementById('finalJumps').textContent = gameState.totalJumps;
+            document.getElementById('gameOverOverlay').style.display = 'flex';
+            
+            updateDebugInfo(`💥 Game over! Score: ${gameState.score} | Jumps: ${gameState.totalJumps}`);
+        }
+
+        // Restart game
+        function restartGame() {
+            document.getElementById('gameOverOverlay').style.display = 'none';
+            startGame();
+        }
+
+        // Initialize game
+        function initGame() {
+            initClouds();
+            updateDebugInfo('🦕 Game ready! Enable camera and point with your index finger to jump!');
+        }
+
+        // Start initialization
+        initGame();
+    </script>
+</body>
+</html>

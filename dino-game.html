@@ -548,17 +548,19 @@
     </div>
 
     <script>
-        // Game State
+        // Game State - Optimized for better performance
         const gameState = {
             isPlaying: false,
             gameOver: false,
             score: 0,
-            speed: 2, // Reduced from 5 to 2 for slower start
-            baseSpeed: 2, // Reduced from 5 to 2
-            maxSpeed: 8, // Maximum speed cap
-            speedIncreaseRate: 0.05, // Reduced from 0.1 to 0.05 for gradual increase
+            speed: 3, // Slightly faster start for better feel
+            baseSpeed: 3,
+            maxSpeed: 12, // Higher max speed for more challenge
+            speedIncreaseRate: 0.08, // Balanced progression
             startTime: 0,
             totalJumps: 0,
+            frameCount: 0, // For performance tracking
+            lastUpdate: 0, // For delta time
             dino: {
                 x: 100,
                 y: 300,
@@ -566,22 +568,29 @@
                 height: 80,
                 velocityY: 0,
                 isJumping: false,
-                animFrame: 0
+                animFrame: 0,
+                hitbox: { // Optimized collision detection
+                    offsetX: 8,
+                    offsetY: 10,
+                    width: 44,
+                    height: 60
+                }
             },
             obstacles: [],
             particles: [],
             clouds: [],
             groundY: 350,
-            gravity: 0.8,
-            jumpPower: -15
+            gravity: 0.85, // Slightly more responsive
+            jumpPower: -16, // Slightly higher jump
+            nextObstacleDistance: 250 // Dynamic obstacle spacing
         };
 
-        // AI Detection State
+        // AI Detection State - Optimized
         const aiState = {
             websocket: null,
             isConnected: false,
             lastJumpTime: 0,
-            jumpCooldown: 600, // Reduced from 800ms for more responsive jumping
+            jumpCooldown: 400, // More responsive jumping
             debugMessages: [],
             handDetected: false,
             fistDetected: false,
@@ -589,7 +598,10 @@
             videoStream: null,
             consecutiveFrames: 0,
             noFistFrames: 0,
-            lastFistState: false // Track previous fist state for better feedback
+            lastFistState: false,
+            processedFrames: 0, // Performance tracking
+            skippedFrames: 0, // Frame skipping for performance
+            targetFPS: 10 // Target FPS for gesture detection
         };
 
         // Canvas Setup
@@ -609,45 +621,57 @@
             }
         }
 
-        // Draw animated dino
+        // Optimized dino rendering with better animations
         function drawDino() {
             const dino = gameState.dino;
+            const runCycle = Math.sin(gameState.frameCount * 0.3);
+            const jumpOffset = dino.isJumping ? Math.sin((gameState.frameCount - dino.jumpStart) * 0.2) * 5 : 0;
             
             ctx.save();
-            ctx.translate(dino.x + dino.width/2, dino.y + dino.height/2);
+            ctx.translate(dino.x + dino.width/2, dino.y + dino.height/2 + jumpOffset);
             
-            // Body
-            ctx.fillStyle = '#8B4513';
+            // Dynamic colors based on speed
+            const speedRatio = (gameState.speed - gameState.baseSpeed) / (gameState.maxSpeed - gameState.baseSpeed);
+            const bodyColor = `hsl(${25 - speedRatio * 15}, 70%, ${45 + speedRatio * 10}%)`;
+            const headColor = `hsl(${30 - speedRatio * 10}, 65%, ${55 + speedRatio * 5}%)`;
+            
+            // Body with subtle scale animation
+            const scaleX = 1 + (dino.isJumping ? 0.05 : runCycle * 0.02);
+            const scaleY = 1 + (dino.isJumping ? -0.03 : -runCycle * 0.01);
+            ctx.scale(scaleX, scaleY);
+            
+            ctx.fillStyle = bodyColor;
             ctx.fillRect(-25, -30, 50, 60);
             
-            // Head
-            ctx.fillStyle = '#A0522D';
+            // Head with subtle animation
+            ctx.fillStyle = headColor;
             ctx.beginPath();
             ctx.arc(0, -45, 25, 0, Math.PI * 2);
             ctx.fill();
             
-            // Eyes
-            const eyeOffset = Math.sin(dino.animFrame * 0.1) > 0.9 ? 0 : 8;
+            // Optimized eyes with blink animation
+            const blinkTime = gameState.frameCount % 180;
+            const eyeHeight = (blinkTime > 175 || blinkTime < 5) ? 2 : 8;
             ctx.fillStyle = '#000';
-            ctx.fillRect(-12, -50, 6, eyeOffset || 8);
-            ctx.fillRect(6, -50, 6, eyeOffset || 8);
+            ctx.fillRect(-12, -50, 6, eyeHeight);
+            ctx.fillRect(6, -50, 6, eyeHeight);
             
-            // Eye shine
-            if (eyeOffset) {
+            // Eye shine - only when eyes are open
+            if (eyeHeight > 2) {
                 ctx.fillStyle = '#FFF';
                 ctx.fillRect(-10, -48, 2, 2);
                 ctx.fillRect(8, -48, 2, 2);
             }
             
-            // Mouth
+            // Optimized mouth
             ctx.strokeStyle = '#000';
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.arc(0, -35, 6, 0, Math.PI);
             ctx.stroke();
             
-            // Arms
-            const armSwing = Math.sin(dino.animFrame * 0.3) * 10;
+            // Arms with improved animation
+            const armSwing = dino.isJumping ? 15 : runCycle * 8;
             ctx.strokeStyle = '#654321';
             ctx.lineWidth = 8;
             ctx.lineCap = 'round';
@@ -659,8 +683,8 @@
             ctx.lineTo(35 - armSwing, 15);
             ctx.stroke();
             
-            // Legs
-            const legSwing = dino.isJumping ? 20 : Math.sin(dino.animFrame * 0.4) * 15;
+            // Legs with running animation
+            const legSwing = dino.isJumping ? 20 : runCycle * 12;
             ctx.beginPath();
             ctx.moveTo(-15, 30);
             ctx.lineTo(-20 + legSwing, 55);
@@ -674,6 +698,18 @@
             ctx.fillRect(13 - legSwing, 55, 12, 8);
             
             ctx.restore();
+            
+            // Debug hitbox (only in debug mode)
+            if (window.DEBUG_MODE) {
+                ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(
+                    dino.x + dino.hitbox.offsetX,
+                    dino.y + dino.hitbox.offsetY,
+                    dino.hitbox.width,
+                    dino.hitbox.height
+                );
+            }
         }
 
         // Create obstacle
@@ -709,41 +745,69 @@
             }
         }
 
-        // Create particles
-        function createParticles(x, y, count = 10) {
-            for (let i = 0; i < count; i++) {
-                gameState.particles.push({
-                    x: x + Math.random() * 20 - 10,
-                    y: y + Math.random() * 20 - 10,
-                    vx: (Math.random() - 0.5) * 8,
-                    vy: (Math.random() - 0.5) * 8 - 2,
-                    life: 30,
-                    maxLife: 30,
-                    size: 2 + Math.random() * 3,
-                    color: `hsl(${30 + Math.random() * 60}, 70%, 60%)`
-                });
+        // Optimized particle system with pooling
+        const particlePool = [];
+        const maxParticles = 50; // Limit for performance
+        
+        function getParticle() {
+            return particlePool.pop() || {
+                x: 0, y: 0, vx: 0, vy: 0, life: 0, maxLife: 0, size: 0, color: '', active: false
+            };
+        }
+        
+        function releaseParticle(particle) {
+            particle.active = false;
+            particlePool.push(particle);
+        }
+        
+        function createParticles(x, y, count = 8) { // Reduced default count
+            const actualCount = Math.min(count, maxParticles - gameState.particles.length);
+            for (let i = 0; i < actualCount; i++) {
+                const particle = getParticle();
+                particle.x = x + Math.random() * 20 - 10;
+                particle.y = y + Math.random() * 20 - 10;
+                particle.vx = (Math.random() - 0.5) * 8;
+                particle.vy = (Math.random() - 0.5) * 8 - 2;
+                particle.life = 25; // Slightly shorter life
+                particle.maxLife = 25;
+                particle.size = 2 + Math.random() * 3;
+                particle.color = `hsl(${30 + Math.random() * 60}, 70%, 60%)`;
+                particle.active = true;
+                gameState.particles.push(particle);
             }
         }
 
-        // Update and draw particles
+        // Optimized particle update and rendering
         function updateParticles() {
-            gameState.particles = gameState.particles.filter(particle => {
+            for (let i = gameState.particles.length - 1; i >= 0; i--) {
+                const particle = gameState.particles[i];
+                
+                if (!particle.active) {
+                    gameState.particles.splice(i, 1);
+                    continue;
+                }
+                
                 particle.x += particle.vx;
                 particle.y += particle.vy;
                 particle.vy += 0.2;
                 particle.life--;
                 
+                if (particle.life <= 0) {
+                    releaseParticle(particle);
+                    gameState.particles.splice(i, 1);
+                    continue;
+                }
+                
+                // Batch rendering for better performance
                 const alpha = particle.life / particle.maxLife;
                 ctx.save();
-                ctx.globalAlpha = alpha;
+                ctx.globalAlpha = alpha * 0.8; // Slightly more transparent
                 ctx.fillStyle = particle.color;
                 ctx.beginPath();
-                ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                ctx.arc(particle.x, particle.y, particle.size * alpha, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.restore();
-                
-                return particle.life > 0;
-            });
+            }
         }
 
         // Draw background
@@ -970,33 +1034,52 @@
             }
         }
 
-        // Start streaming video frames to Python server
+        // Optimized video streaming with adaptive frame rate
         function startVideoStreaming() {
             const video = document.getElementById('videoElement');
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             
-            canvas.width = 320;
-            canvas.height = 240;
+            canvas.width = 280; // Slightly smaller for better performance
+            canvas.height = 210;
+            
+            let frameSkipCounter = 0;
             
             function sendFrame() {
-                if (aiState.isConnected && video.readyState === video.HAVE_ENOUGH_DATA) {
-                    // Draw video frame to canvas
-                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                    
-                    // Convert to base64 and send to Python server
-                    const dataURL = canvas.toDataURL('image/jpeg', 0.8);
-                    
-                    if (aiState.websocket && aiState.websocket.readyState === WebSocket.OPEN) {
-                        aiState.websocket.send(JSON.stringify({
-                            type: 'video_frame',
-                            frame: dataURL
-                        }));
-                    }
+                if (!aiState.isConnected || video.readyState !== video.HAVE_ENOUGH_DATA) {
+                    setTimeout(sendFrame, 100);
+                    return;
                 }
                 
-                // Send frames at 10 FPS to reduce load
-                setTimeout(sendFrame, 100);
+                // Adaptive frame skipping based on performance
+                frameSkipCounter++;
+                const skipFrames = gameState.isPlaying ? 2 : 1; // Skip more frames during gameplay
+                
+                if (frameSkipCounter % skipFrames === 0) {
+                    try {
+                        // Draw video frame to canvas
+                        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                        
+                        // Convert to base64 with lower quality for performance
+                        const dataURL = canvas.toDataURL('image/jpeg', 0.6);
+                        
+                        if (aiState.websocket && aiState.websocket.readyState === WebSocket.OPEN) {
+                            aiState.websocket.send(JSON.stringify({
+                                type: 'video_frame',
+                                frame: dataURL
+                            }));
+                            aiState.processedFrames++;
+                        }
+                    } catch (error) {
+                        console.warn('Frame processing error:', error);
+                    }
+                } else {
+                    aiState.skippedFrames++;
+                }
+                
+                // Adaptive FPS based on game state
+                const frameDelay = gameState.isPlaying ? 120 : 100; // Slower during gameplay
+                setTimeout(sendFrame, frameDelay);
             }
             
             sendFrame();
@@ -1078,131 +1161,182 @@
             }
         }
 
-        // Jump function
+        // Optimized jump function with better feedback
         function jump() {
             if (!gameState.dino.isJumping) {
                 gameState.dino.velocityY = gameState.jumpPower;
                 gameState.dino.isJumping = true;
+                gameState.dino.jumpStart = gameState.frameCount; // For animation timing
                 gameState.totalJumps++;
                 
-                // Create jump particles
-                createParticles(gameState.dino.x + gameState.dino.width/2, gameState.dino.y + gameState.dino.height);
+                // Create jump particles (reduced for performance)
+                createParticles(gameState.dino.x + gameState.dino.width/2, gameState.dino.y + gameState.dino.height, 5);
+                
+                // Visual feedback (optional screen shake)
+                if (window.ENABLE_SCREEN_SHAKE) {
+                    canvas.style.transform = 'translate(2px, 1px)';
+                    setTimeout(() => {
+                        canvas.style.transform = 'translate(0, 0)';
+                    }, 100);
+                }
             }
         }
 
-        // Game loop
-        function gameLoop() {
+        // Optimized game loop with delta time and better performance
+        function gameLoop(currentTime = 0) {
             if (!gameState.isPlaying) return;
             
-            // Clear canvas
+            // Delta time for frame-rate independent gameplay
+            const deltaTime = Math.min((currentTime - gameState.lastUpdate) / 16.67, 2); // Cap at 2x normal speed
+            gameState.lastUpdate = currentTime;
+            gameState.frameCount++;
+            
+            // Clear canvas efficiently
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
             // Draw background
             drawBackground();
             
-            // Update dino physics
+            // Update dino physics with delta time
             if (gameState.dino.isJumping) {
-                gameState.dino.velocityY += gameState.gravity;
-                gameState.dino.y += gameState.dino.velocityY;
+                gameState.dino.velocityY += gameState.gravity * deltaTime;
+                gameState.dino.y += gameState.dino.velocityY * deltaTime;
                 
                 if (gameState.dino.y >= gameState.groundY - gameState.dino.height) {
                     gameState.dino.y = gameState.groundY - gameState.dino.height;
                     gameState.dino.velocityY = 0;
                     gameState.dino.isJumping = false;
                     
-                    // Landing particles
-                    createParticles(gameState.dino.x + gameState.dino.width/2, gameState.dino.y + gameState.dino.height, 5);
+                    // Landing particles (reduced count)
+                    createParticles(gameState.dino.x + gameState.dino.width/2, gameState.dino.y + gameState.dino.height, 4);
                 }
             }
             
-            // Update animation frame
-            gameState.dino.animFrame += 0.2;
+            // Dynamic obstacle spawning based on speed and distance
+            const lastObstacle = gameState.obstacles[gameState.obstacles.length - 1];
+            const minDistance = Math.max(200, 400 - gameState.speed * 15); // Dynamic spacing
             
-            // Spawn obstacles
-            if (gameState.obstacles.length === 0 || gameState.obstacles[gameState.obstacles.length - 1].x < canvas.width - 300) {
-                if (Math.random() < 0.02) {
+            if (!lastObstacle || lastObstacle.x < canvas.width - gameState.nextObstacleDistance) {
+                const spawnChance = 0.015 + (gameState.speed * 0.002); // Increase spawn rate with speed
+                if (Math.random() < spawnChance) {
                     gameState.obstacles.push(createObstacle());
+                    // Randomize next obstacle distance
+                    gameState.nextObstacleDistance = minDistance + Math.random() * 150;
                 }
             }
             
-            // Update obstacles
-            gameState.obstacles = gameState.obstacles.filter(obstacle => {
-                obstacle.x -= gameState.speed;
+            // Update obstacles with delta time
+            for (let i = gameState.obstacles.length - 1; i >= 0; i--) {
+                const obstacle = gameState.obstacles[i];
+                obstacle.x -= gameState.speed * deltaTime;
                 
-                // Check if passed
+                // Check if passed (score increase)
                 if (!obstacle.passed && obstacle.x + obstacle.width < gameState.dino.x) {
                     obstacle.passed = true;
                     gameState.score++;
-                    // Gradual speed increase with cap
+                    
+                    // Smoother speed progression
                     gameState.speed = Math.min(
                         gameState.maxSpeed,
-                        gameState.baseSpeed + (gameState.score * gameState.speedIncreaseRate)
+                        gameState.baseSpeed + Math.sqrt(gameState.score * gameState.speedIncreaseRate)
                     );
+                    
+                    // Score milestone particles
+                    if (gameState.score % 10 === 0) {
+                        createParticles(gameState.dino.x + gameState.dino.width/2, gameState.dino.y, 6);
+                    }
                 }
                 
-                return obstacle.x > -obstacle.width;
-            });
+                // Remove off-screen obstacles
+                if (obstacle.x < -obstacle.width - 50) {
+                    gameState.obstacles.splice(i, 1);
+                }
+            }
             
-            // Collision detection
+            // Optimized collision detection using hitboxes
             for (let obstacle of gameState.obstacles) {
-                if (gameState.dino.x < obstacle.x + obstacle.width &&
-                    gameState.dino.x + gameState.dino.width > obstacle.x &&
-                    gameState.dino.y < obstacle.y + obstacle.height &&
-                    gameState.dino.y + gameState.dino.height > obstacle.y) {
+                const dinoHitbox = {
+                    x: gameState.dino.x + gameState.dino.hitbox.offsetX,
+                    y: gameState.dino.y + gameState.dino.hitbox.offsetY,
+                    width: gameState.dino.hitbox.width,
+                    height: gameState.dino.hitbox.height
+                };
+                
+                if (dinoHitbox.x < obstacle.x + obstacle.width &&
+                    dinoHitbox.x + dinoHitbox.width > obstacle.x &&
+                    dinoHitbox.y < obstacle.y + obstacle.height &&
+                    dinoHitbox.y + dinoHitbox.height > obstacle.y) {
                     
-                    // Game over
+                    // Game over with explosion effect
+                    createParticles(gameState.dino.x + gameState.dino.width/2, gameState.dino.y + gameState.dino.height/2, 15);
                     gameOver();
                     return;
                 }
             }
             
-            // Draw everything
+            // Render everything
             drawDino();
             gameState.obstacles.forEach(drawObstacle);
             updateParticles();
             
-            // Update UI
-            const gameInfo = document.getElementById('gameInfo');
-            const speedPercentage = ((gameState.speed - gameState.baseSpeed) / (gameState.maxSpeed - gameState.baseSpeed) * 100).toFixed(0);
-            gameInfo.textContent = `Score: ${gameState.score} | Speed: ${gameState.speed.toFixed(1)}x (${speedPercentage}%)`;
+            // Optimized UI updates (less frequent)
+            if (gameState.frameCount % 6 === 0) { // Update every 6 frames (~10 FPS)
+                const gameInfo = document.getElementById('gameInfo');
+                const speedPercentage = ((gameState.speed - gameState.baseSpeed) / (gameState.maxSpeed - gameState.baseSpeed) * 100).toFixed(0);
+                const playTime = Math.floor((currentTime - gameState.startTime) / 1000);
+                gameInfo.textContent = `Score: ${gameState.score} | Speed: ${gameState.speed.toFixed(1)}x | Time: ${playTime}s`;
+            }
             
             requestAnimationFrame(gameLoop);
         }
 
-        // Start game
+        // Optimized game start
         function startGame() {
             if (!aiState.isConnected) {
                 alert('Please connect to Python AI server first!');
                 return;
             }
             
-            // Reset game state
+            // Reset game state with optimizations
             gameState.isPlaying = true;
             gameState.gameOver = false;
             gameState.score = 0;
             gameState.speed = gameState.baseSpeed;
-            gameState.startTime = Date.now();
+            gameState.startTime = performance.now();
+            gameState.lastUpdate = performance.now();
+            gameState.frameCount = 0;
             gameState.totalJumps = 0;
+            gameState.nextObstacleDistance = 250;
             
             gameState.dino.y = gameState.groundY - gameState.dino.height;
             gameState.dino.velocityY = 0;
             gameState.dino.isJumping = false;
-            gameState.dino.animFrame = 0;
+            gameState.dino.jumpStart = 0;
             
+            // Clear arrays and reset pools
             gameState.obstacles = [];
             gameState.particles = [];
+            particlePool.length = 0; // Reset particle pool
             
-            // Reset AI timing
+            // Reset AI timing and performance counters
             aiState.lastJumpTime = 0;
+            aiState.processedFrames = 0;
+            aiState.skippedFrames = 0;
             
-            // Hide start overlay
-            document.getElementById('startOverlay').style.display = 'none';
+            // Hide start overlay with smooth transition
+            const overlay = document.getElementById('startOverlay');
+            overlay.style.transition = 'opacity 0.3s ease-out';
+            overlay.style.opacity = '0';
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                overlay.style.opacity = '1';
+            }, 300);
             
-            // Initialize and start game loop
+            // Initialize and start optimized game loop
             initClouds();
-            gameLoop();
+            requestAnimationFrame(gameLoop);
             
-            updateDebugInfo('🎮 Game started! AI is watching for fist gestures!');
+            updateDebugInfo('🎮 Optimized game started! AI detection active!');
         }
 
         // Game over

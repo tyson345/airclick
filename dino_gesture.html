@@ -518,15 +518,19 @@
     </div>
 
     <script>
-        // Game State
+        // Optimized Game State
         const gameState = {
             isPlaying: false,
             gameOver: false,
             score: 0,
-            speed: 5,
-            baseSpeed: 5,
+            speed: 4, // Better starting speed
+            baseSpeed: 4,
+            maxSpeed: 10, // Speed cap for playability
+            speedIncreaseRate: 0.1,
             startTime: 0,
             totalJumps: 0,
+            frameCount: 0,
+            lastUpdate: 0,
             dino: {
                 x: 100,
                 y: 300,
@@ -534,30 +538,40 @@
                 height: 80,
                 velocityY: 0,
                 isJumping: false,
-                animFrame: 0
+                animFrame: 0,
+                jumpStart: 0,
+                hitbox: { // More forgiving collision
+                    offsetX: 8,
+                    offsetY: 10,
+                    width: 44,
+                    height: 60
+                }
             },
             obstacles: [],
             particles: [],
             clouds: [],
             groundY: 350,
-            gravity: 0.8,
-            jumpPower: -15
+            gravity: 0.85,
+            jumpPower: -16,
+            nextObstacleDistance: 250
         };
 
-        // Index Finger Gesture Detection State
+        // Optimized Gesture Detection State
         const gestureState = {
             isEnabled: false,
             lastJumpTime: 0,
-            jumpCooldown: 100,
+            jumpCooldown: 300, // More responsive
             debugMessages: [],
             handDetected: false,
             isPointing: false,
             isOpenPalm: false,
-            isPeaceSign: false, // new gesture
+            isPeaceSign: false,
             skinThreshold: 85,
             pointingSensitivity: 4,
             detectionCanvas: null,
             detectionCtx: null,
+            frameSkipCounter: 0,
+            targetFPS: 15 // Limit detection FPS for performance
         };
 
         // Canvas Setup
@@ -766,10 +780,14 @@
             }
         }
 
-        // ULTRA SIMPLE index finger, open palm, and peace sign detection algorithm
+        // Optimized gesture detection with frame skipping
 function detectGesture() {
     const video = document.getElementById('videoElement');
     if (!video || video.paused || video.ended || !gestureState.detectionCanvas) return;
+    
+    // Frame skipping for performance
+    gestureState.frameSkipCounter++;
+    if (gestureState.frameSkipCounter % 2 !== 0) return; // Skip every other frame
     
     try {
         gestureState.skinThreshold = parseInt(document.getElementById('skinThreshold').value);

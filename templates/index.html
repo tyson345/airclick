@@ -1,931 +1,2091 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gesture Control Hub</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AirClick Control Hub</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    body {
-      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      color: #fff;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      overflow-x: hidden;
-    }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0e1a;
+            color: #ffffff;
+            overflow: hidden;
+        }
 
-    .container {
-      text-align: center;
-      max-width: 1200px;
-      width: 100%;
-      position: relative;
-    }
+        .dashboard-container {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+        }
 
-    h1 {
-      font-size: 3.5rem;
-      color: #00ffff;
-      text-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
-      margin-bottom: 60px;
-      animation: glow 2s ease-in-out infinite alternate;
-    }
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, #1a1f2e 0%, #151a26 100%);
+            border-right: 1px solid #2a3441;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
 
-    @keyframes glow {
-      from { text-shadow: 0 0 20px rgba(0, 255, 255, 0.5); }
-      to { text-shadow: 0 0 30px rgba(0, 255, 255, 0.8); }
-    }
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid #2a3441;
+        }
 
-    .carousel-container {
-      position: relative;
-      width: 100%;
-      height: 500px;
-      perspective: 1000px;
-      margin: 0 auto;
-    }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
 
-    .carousel {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      transform-style: preserve-3d;
-      transition: transform 0.6s ease-in-out;
-    }
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
 
-    .mode-card {
-      position: absolute;
-      width: 400px;
-      height: 300px;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%);
-      background: linear-gradient(135deg, #00bcd4, #0097a7);
-      border-radius: 20px;
-      cursor: pointer;
-      transition: all 0.6s ease-in-out;
-      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
-      border: 2px solid transparent;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 30px;
-      opacity: 0.7;
-      transform-origin: center;
-    }
+        .logo-text {
+            font-size: 20px;
+            font-weight: 700;
+            color: #ffffff;
+        }
 
-    .mode-card.active {
-      opacity: 1;
-      transform: translate(-50%, -50%) scale(1.1);
-      box-shadow: 0 25px 50px rgba(0, 188, 212, 0.4);
-      border-color: #00ffff;
-      z-index: 10;
-    }
+        .logo-subtitle {
+            font-size: 12px;
+            color: #8892b0;
+            margin-left: 44px;
+        }
 
-    .mode-card.prev {
-      transform: translate(-120%, -50%) scale(0.8) rotateY(15deg);
-      opacity: 0.6;
-    }
+        .sidebar-nav {
+            flex: 1;
+            padding: 20px 0;
+            overflow-y: auto;
+        }
 
-    .mode-card.next {
-      transform: translate(20%, -50%) scale(0.8) rotateY(-15deg);
-      opacity: 0.6;
-    }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            color: #8892b0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+            font-size: 14px;
+            font-weight: 500;
+        }
 
-    .mode-card.hidden {
-      transform: translate(-50%, -50%) scale(0.6);
-      opacity: 0.3;
-    }
+        .nav-item:hover {
+            background: rgba(102, 126, 234, 0.1);
+            color: #ffffff;
+        }
 
-    .mode-icon {
-      font-size: 3rem;
-      margin-bottom: 15px;
-      filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
-    }
+        .nav-item.active {
+            background: rgba(102, 126, 234, 0.15);
+            color: #667eea;
+            border-left-color: #667eea;
+        }
 
-    .mode-title {
-      font-size: 1.8rem;
-      font-weight: 700;
-      margin-bottom: 10px;
-      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    }
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
 
-    .mode-description {
-      font-size: 1rem;
-      opacity: 0.9;
-      font-weight: 400;
-      line-height: 1.4;
-    }
+        .main-content {
+            flex: 1;
+            background: #0f1419;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
 
-    .carousel-nav {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      background: rgba(255, 255, 255, 0.1);
-      border: none;
-      color: white;
-      font-size: 2rem;
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      backdrop-filter: blur(10px);
-      z-index: 20;
-    }
+        .main-header {
+            padding: 20px 32px;
+            border-bottom: 1px solid #1e2329;
+            background: rgba(15, 20, 25, 0.8);
+            backdrop-filter: blur(10px);
+        }
 
-    .carousel-nav:hover {
-      background: rgba(255, 255, 255, 0.2);
-      transform: translateY(-50%) scale(1.1);
-    }
+        .header-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 4px;
+        }
 
-    .carousel-nav.prev {
-      left: 20px;
-    }
+        .header-subtitle {
+            font-size: 14px;
+            color: #8892b0;
+        }
 
-    .carousel-nav.next {
-      right: 20px;
-    }
+        .content-area {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+            position: relative;
+        }
 
-    .mode-indicators {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin-top: 10px; /* changed from 30px to 10px */
-    }
+        /* Updated layout to match reference image exactly */
+        .mode-control-interface {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            padding: 20px;
+            background: #0f1419;
+        }
 
-    .indicator {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.3);
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
+        .mode-control-interface.active {
+            display: flex;
+        }
 
-    .indicator.active {
-      background: #00ffff;
-      transform: scale(1.2);
-    }
+        /* Compact header layout matching reference */
+        .mode-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 32px;
+            padding: 0 20px;
+        }
 
-         .action-buttons {
-       position: absolute;
-       top: 20px;
-       right: 20px;
-       display: flex;
-       gap: 10px;
-       z-index: 30;
-     }
+        .mode-icon {
+            font-size: 48px;
+            background: linear-gradient(135deg, #8b5cf6, #a855f7);
+            padding: 12px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-                   .action-btn {
-        background: linear-gradient(135deg, #4caf50, #388e3c);
-        color: white;
-        border: none;
-        padding: 12px 20px;
-        font-size: 0.9rem;
-        font-weight: 600;
-        border-radius: 20px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
-        display: none;
-        opacity: 0;
-        transform: translateY(20px);
-      }
+        .mode-header-text {
+            flex: 1;
+        }
 
-    .action-btn:hover {
-      transform: translateY(-2px) scale(1.05);
-      box-shadow: 0 12px 25px rgba(76, 175, 80, 0.4);
-    }
+        .mode-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #ffffff;
+            margin: 0 0 4px 0;
+        }
 
-         .action-btn.visible {
-       display: block;
-       opacity: 1;
-       transform: translateY(0);
-       animation: slideUp 0.3s ease;
-     }
+        .mode-description {
+            font-size: 16px;
+            color: #8892b0;
+            margin: 0;
+            line-height: 1.4;
+        }
 
-    @keyframes slideUp {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
+        /* Two-column grid layout matching reference */
+        .mode-content-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 40px;
+            flex: 1;
+            align-items: start;
+        }
 
-    .close-btn {
-      background: linear-gradient(135deg, #f44336, #d32f2f);
-    }
+        .mode-info-section {
+            background: rgba(26, 31, 46, 0.6);
+            border-radius: 16px;
+            padding: 32px;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+        }
 
-    .close-btn:hover {
-      box-shadow: 0 12px 25px rgba(244, 67, 54, 0.4);
-    }
+        .gesture-instructions {
+            width: 100%;
+        }
 
-         .game-options {
-       margin-top: 20px;
-       display: none;
-       width: 100%;
-       opacity: 0;
-       transform: translateY(20px);
-       transition: all 0.3s ease;
-     }
+        .instructions-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #ffffff;
+            margin: 0 0 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
 
-         .game-option-btn {
-       background: linear-gradient(135deg, #ff6b6b, #ee5a24);
-       color: white;
-       border: none;
-       padding: 15px 25px;
-       font-size: 1.1rem;
-       font-weight: 600;
-       border-radius: 15px;
-       cursor: pointer;
-       transition: all 0.3s ease;
-       box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
-       margin: 8px;
-       width: 100%;
-       max-width: 300px;
-       display: block;
-     }
+        .instructions-subtitle {
+            font-size: 16px;
+            color: #8892b0;
+            margin: 0 0 32px 0;
+        }
 
-    .game-option-btn:hover {
-      transform: translateY(-2px) scale(1.05);
-      box-shadow: 0 8px 20px rgba(255, 107, 107, 0.4);
-    }
+        /* Gesture cards matching reference design */
+        .gesture-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
 
-    .notification {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: rgba(0, 0, 0, 0.9);
-      color: white;
-      padding: 15px 20px;
-      border-radius: 8px;
-      border-left: 4px solid #00bcd4;
-      display: none;
-      z-index: 1000;
-      animation: slideIn 0.3s ease;
-    }
+        .gesture-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 20px;
+            background: rgba(15, 20, 25, 0.8);
+            border-radius: 12px;
+            border: 1px solid rgba(139, 92, 246, 0.1);
+        }
 
-    @keyframes slideIn {
-      from {
-        opacity: 0;
-        transform: translateX(100%);
-      }
-      to {
-        opacity: 1;
-        transform: translateX(0);
-      }
-    }
+        .gesture-icon {
+            font-size: 32px;
+            flex-shrink: 0;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(139, 92, 246, 0.1);
+            border-radius: 8px;
+        }
 
-    footer {
-      position: fixed;
-      bottom: 20px;
-      font-size: 0.9rem;
-      color: #ccc;
-      text-align: center;
-    }
+        .gesture-details {
+            flex: 1;
+        }
 
-         /* Instruction Modal */
-     .instruction-modal {
-       position: fixed;
-       top: 0;
-       left: 0;
-       width: 100%;
-       height: 100%;
-       background: rgba(0, 0, 0, 0.8);
-       display: none;
-       justify-content: center;
-       align-items: center;
-       z-index: 1000;
-       animation: fadeIn 0.3s ease;
-     }
+        .gesture-name {
+            display: block;
+            font-size: 18px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 8px;
+        }
 
-     .instruction-content {
-       background: linear-gradient(135deg, #1a1a2e, #16213e);
-       border-radius: 20px;
-       padding: 30px;
-       max-width: 600px;
-       width: 90%;
-       max-height: 80vh;
-       overflow-y: auto;
-       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
-       border: 2px solid #00ffff;
-       animation: slideUp 0.3s ease;
-     }
+        .gesture-action {
+            display: block;
+            font-size: 14px;
+            color: #8892b0;
+            line-height: 1.5;
+            margin-bottom: 8px;
+        }
 
-     .instruction-header {
-       text-align: center;
-       margin-bottom: 25px;
-       border-bottom: 2px solid #00ffff;
-       padding-bottom: 15px;
-     }
+        .action-label {
+            display: inline-block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #8b5cf6;
+            background: rgba(139, 92, 246, 0.1);
+            padding: 4px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
 
-     .instruction-title {
-       font-size: 2rem;
-       color: #00ffff;
-       margin-bottom: 10px;
-     }
+        /* Compact controls section matching reference */
+        .mode-controls-section {
+            background: rgba(26, 31, 46, 0.6);
+            border-radius: 16px;
+            padding: 32px 24px;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
 
-     .instruction-subtitle {
-       color: #ccc;
-       font-size: 1rem;
-     }
+        .controls-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #ffffff;
+            margin: 0 0 16px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
 
-     .instruction-list {
-       list-style: none;
-       padding: 0;
-     }
+        .mode-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
 
-     .instruction-list li {
-       background: rgba(255, 255, 255, 0.05);
-       margin: 10px 0;
-       padding: 15px;
-       border-radius: 10px;
-       border-left: 4px solid #00ffff;
-       display: flex;
-       align-items: center;
-       gap: 15px;
-     }
+        .control-button {
+            padding: 16px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
 
-     .instruction-icon {
-       font-size: 1.5rem;
-       min-width: 30px;
-     }
+        .start-button {
+            background: linear-gradient(135deg, #8b5cf6, #a855f7);
+            color: white;
+        }
 
-     .instruction-text {
-       color: #fff;
-       line-height: 1.5;
-     }
+        .start-button:hover {
+            background: linear-gradient(135deg, #7c3aed, #9333ea);
+            transform: translateY(-2px);
+        }
 
-     .instruction-close {
-       background: linear-gradient(135deg, #00bcd4, #0097a7);
-       color: white;
-       border: none;
-       padding: 15px 30px;
-       border-radius: 25px;
-       font-size: 1.1rem;
-       font-weight: 600;
-       cursor: pointer;
-       transition: all 0.3s ease;
-       margin-top: 20px;
-       width: 100%;
-     }
+        .stop-button {
+            background: rgba(75, 85, 99, 0.3);
+            color: #9ca3af;
+            border: 1px solid rgba(75, 85, 99, 0.5);
+        }
 
-     .instruction-close:hover {
-       transform: translateY(-2px);
-       box-shadow: 0 10px 20px rgba(0, 188, 212, 0.3);
-     }
+        .stop-button:enabled {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
 
-     @keyframes fadeIn {
-       from { opacity: 0; }
-       to { opacity: 1; }
-     }
+        .stop-button:enabled:hover {
+            background: rgba(239, 68, 68, 0.3);
+        }
 
-     @keyframes slideUp {
-       from { 
-         opacity: 0;
-         transform: translateY(50px);
-       }
-       to { 
-         opacity: 1;
-         transform: translateY(0);
-       }
-     }
+        .mode-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            background: rgba(15, 20, 25, 0.6);
+        }
 
-     @media (max-width: 768px) {
-       h1 { font-size: 2.5rem; }
-       .mode-card { width: 300px; height: 250px; }
-       .carousel-nav { width: 40px; height: 40px; font-size: 1.5rem; }
-       .mode-title { font-size: 1.4rem; }
-       .mode-icon { font-size: 2.5rem; }
-       .instruction-content { padding: 20px; }
-       .instruction-title { font-size: 1.5rem; }
-     }
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #6b7280;
+        }
 
-    .refresh-btn {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      background: linear-gradient(135deg, #2196f3, #1565c0);
-      color: white;
-      border: none;
-      padding: 12px 20px;
-      font-size: 1rem;
-      font-weight: 600;
-      border-radius: 20px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      box-shadow: 0 5px 15px rgba(33, 150, 243, 0.3);
-      z-index: 31;
-    }
+        .status-active .status-indicator {
+            background: #10b981;
+        }
 
-    .refresh-btn:hover {
-      transform: translateY(-2px) scale(1.05);
-      box-shadow: 0 12px 25px rgba(33, 150, 243, 0.4);
-    }
-  </style>
+        .status-text {
+            font-weight: 600;
+            color: #8b5cf6;
+        }
+
+        .session-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 8px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 16px;
+            background: rgba(15, 20, 25, 0.6);
+            border-radius: 8px;
+        }
+
+        .stat-number {
+            display: block;
+            font-size: 24px;
+            font-weight: 700;
+            color: #8b5cf6;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            display: block;
+            font-size: 12px;
+            color: #8892b0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .welcome-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+        }
+
+        .welcome-icon {
+            font-size: 120px;
+            margin-bottom: 32px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .welcome-title {
+            font-size: 48px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 16px;
+        }
+
+        .welcome-subtitle {
+            font-size: 18px;
+            color: #8892b0;
+            margin-bottom: 48px;
+            max-width: 600px;
+            line-height: 1.6;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        .feature-card {
+            background: rgba(26, 31, 46, 0.6);
+            border: 1px solid #2a3441;
+            border-radius: 16px;
+            padding: 24px;
+            text-align: left;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-4px);
+            border-color: #667eea;
+            box-shadow: 0 12px 40px rgba(102, 126, 234, 0.1);
+        }
+
+        .feature-icon {
+            font-size: 32px;
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        .feature-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 8px;
+        }
+
+        .feature-description {
+            font-size: 14px;
+            color: #8892b0;
+            line-height: 1.5;
+        }
+
+        /* Voice Interface Styles */
+        .voice-interface {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .voice-interface.active {
+            display: flex;
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(26, 31, 46, 0.3);
+            border-radius: 16px;
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .message {
+            display: flex;
+            gap: 12px;
+            max-width: 80%;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .message.bot .message-avatar {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .message.user .message-avatar {
+            background: linear-gradient(135deg, #4caf50, #45a049);
+        }
+
+        .message-content {
+            background: rgba(42, 52, 65, 0.6);
+            padding: 12px 16px;
+            border-radius: 12px;
+            color: #ffffff;
+            line-height: 1.5;
+        }
+
+        .message.user .message-content {
+            background: rgba(102, 126, 234, 0.2);
+        }
+
+        .voice-controls {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .voice-button {
+            width: 80px;
+            height: 80px;
+            border: none;
+            border-radius: 50%;
+            font-size: 32px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mic-button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .mic-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .mic-button.listening {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .clear-button {
+            background: rgba(42, 52, 65, 0.8);
+            color: #8892b0;
+            width: 60px;
+            height: 60px;
+            font-size: 24px;
+        }
+
+        .clear-button:hover {
+            background: rgba(255, 107, 107, 0.2);
+            color: #ff6b6b;
+        }
+
+        /* Notes Interface Styles */
+        .notes-interface {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .notes-interface.active {
+            display: flex;
+        }
+
+        .notes-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .notes-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .notes-controls {
+            display: flex;
+            gap: 12px;
+        }
+
+        .notes-button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .primary-button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .secondary-button {
+            background: rgba(42, 52, 65, 0.8);
+            color: #8892b0;
+        }
+
+        .notes-button:hover {
+            transform: translateY(-1px);
+        }
+
+        .notes-content {
+            flex: 1;
+            display: flex;
+            gap: 24px;
+        }
+
+        .notes-input-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .notes-textarea {
+            flex: 1;
+            background: rgba(26, 31, 46, 0.6);
+            border: 1px solid #2a3441;
+            border-radius: 12px;
+            padding: 20px;
+            color: #ffffff;
+            font-size: 16px;
+            line-height: 1.6;
+            resize: none;
+            outline: none;
+            font-family: inherit;
+        }
+
+        .notes-textarea:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .notes-textarea::placeholder {
+            color: #8892b0;
+        }
+
+        .voice-to-text-controls {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+            align-items: center;
+        }
+
+        .voice-text-button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .voice-text-button.listening {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            color: white;
+            animation: pulse 1.5s infinite;
+        }
+
+        .social-sharing {
+            width: 300px;
+            background: rgba(26, 31, 46, 0.6);
+            border: 1px solid #2a3441;
+            border-radius: 12px;
+            padding: 20px;
+            height: fit-content;
+        }
+
+        .social-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 16px;
+        }
+
+        .social-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .social-button {
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .whatsapp { background: #25d366; color: white; }
+        .twitter { background: #1da1f2; color: white; }
+        .facebook { background: #4267b2; color: white; }
+        .instagram { background: #e4405f; color: white; }
+        .linkedin { background: #0077b5; color: white; }
+
+        .social-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 240px;
+            }
+            
+            .content-area {
+                padding: 20px;
+            }
+            
+            .welcome-title {
+                font-size: 36px;
+            }
+            
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .notes-content {
+                flex-direction: column;
+            }
+            
+            .social-sharing {
+                width: 100%;
+            }
+
+            /* Responsive design improvements */
+            .mode-content-wrapper {
+                flex-direction: column;
+                gap: 30px;
+            }
+            
+            .mode-controls-section {
+                flex: none;
+                min-height: auto;
+            }
+            
+            .mode-info-section {
+                max-width: 100%;
+            }
+        }
+
+            /* Added styles for gesture instructions */
+            .gesture-instructions {
+                background: rgba(26, 31, 46, 0.4);
+                border-radius: 16px;
+                padding: 32px;
+                margin: 0;
+                border: 1px solid rgba(139, 92, 246, 0.2);
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            }
+
+            .instructions-title {
+                color: #a855f7;
+                font-size: 18px;
+                font-weight: 600;
+                margin-bottom: 8px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+            .instructions-subtitle {
+                color: #8892b0;
+                font-size: 14px;
+                margin-bottom: 28px;
+                font-weight: 400;
+            }
+
+            /* Updated gesture item styling for better visual hierarchy */
+            .gesture-item {
+                display: flex;
+                align-items: flex-start;
+                gap: 16px;
+                padding: 20px;
+                background: rgba(15, 20, 25, 0.6);
+                border-radius: 12px;
+                transition: all 0.3s ease;
+                border: 1px solid rgba(42, 52, 65, 0.4);
+                margin-bottom: 16px;
+            }
+
+            .gesture-item:hover {
+                background: rgba(15, 20, 25, 0.8);
+                border-color: rgba(139, 92, 246, 0.3);
+                transform: translateY(-2px);
+            }
+
+            .gesture-icon {
+                font-size: 28px;
+                min-width: 48px;
+                text-align: center;
+                background: rgba(139, 92, 246, 0.1);
+                border-radius: 10px;
+                padding: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .gesture-details {
+                flex: 1;
+                font-size: 15px;
+                line-height: 1.5;
+            }
+
+            .gesture-name {
+                color: #ffffff;
+                font-weight: 600;
+                font-size: 16px;
+                display: block;
+                margin-bottom: 6px;
+            }
+
+            .gesture-action {
+                color: #8892b0;
+                font-weight: 400;
+                line-height: 1.6;
+            }
+
+            /* Enhanced mode-specific instruction colors */
+            #regularInterface .gesture-instructions {
+                border-left-color: #28a745;
+            }
+
+            #regularInterface .gesture-icon {
+                background: rgba(40, 167, 69, 0.1);
+            }
+
+            #regularInterface .gesture-name {
+                color: #28a745;
+            }
+
+            #movieInterface .gesture-instructions {
+                border-left-color: #dc3545;
+            }
+
+            #movieInterface .gesture-icon {
+                background: rgba(220, 53, 69, 0.1);
+            }
+
+            #movieInterface .gesture-name {
+                color: #dc3545;
+            }
+
+            #presentationInterface .gesture-instructions {
+                border-left-color: #fd7e14;
+            }
+
+            #presentationInterface .gesture-icon {
+                background: rgba(253, 126, 20, 0.1);
+            }
+
+            #presentationInterface .gesture-name {
+                color: #fd7e14;
+            }
+
+            #cameraInterface .gesture-instructions {
+                border-left-color: #6f42c1;
+            }
+
+            #cameraInterface .gesture-icon {
+                background: rgba(111, 66, 193, 0.1);
+            }
+
+            #cameraInterface .gesture-name {
+                color: #6f42c1;
+            }
+
+            /* Responsive design for smaller screens */
+            @media (max-width: 768px) {
+                .mode-content-wrapper {
+                    flex-direction: column;
+                    gap: 20px;
+                }
+
+                .mode-controls-section {
+                    flex: none;
+                    width: 100%;
+                }
+            }
+
+            /* Additional styles for updated UI elements */
+            .instructions-subtitle {
+                color: #6c757d;
+                font-size: 14px;
+                margin-bottom: 24px;
+                font-style: italic;
+            }
+
+        /* Updated controls title styling */
+        .controls-title {
+            color: #a855f7;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+            .mode-status {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 10px;
+                padding: 12px 24px;
+                border-radius: 8px;
+                font-size: 14px;
+                font-weight: 500;
+                margin-top: 20px;
+            }
+
+            .status-indicator {
+                font-size: 18px;
+                color: #6c757d;
+            }
+
+            .status-active .status-indicator {
+                color: #28a745;
+            }
+
+            .status-text {
+                color: #ffffff;
+            }
+
+        /* Updated session stats styling to match screenshot */
+        .session-stats {
+            display: flex;
+            gap: 32px;
+            margin-top: 16px;
+            padding: 20px;
+            background: rgba(15, 20, 25, 0.6);
+            border-radius: 12px;
+            width: 100%;
+            max-width: 240px;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+        }
+
+        .stat-number {
+            font-size: 28px;
+            font-weight: 700;
+            color: #a855f7;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            display: block;
+            font-size: 12px;
+            color: #8892b0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <button class="refresh-btn" onclick="location.reload()">
-      ⟳ Refresh
-    </button>
-    <h1>Gesture Control Hub</h1>
-    
-    <div class="carousel-container">
-      <button class="carousel-nav prev" onclick="navigateCarousel(-1)">‹</button>
-      <button class="carousel-nav next" onclick="navigateCarousel(1)">›</button>
-      
-      <div class="carousel" id="carousel">
-        <div class="mode-card active" data-mode="regular" onclick="selectMode('regular')">
-          <div class="mode-icon">🖱️</div>
-          <div class="mode-title">Regular Mouse</div>
-          <div class="mode-description">Standard mouse control for everyday use</div>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div class="logo-icon">🎯</div>
+                    <div class="logo-text">AirClick</div>
+                </div>
+                <div class="logo-subtitle">Control Hub Dashboard</div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <div class="nav-item active" onclick="showWelcome()">
+                    <div class="nav-icon">🏠</div>
+                    <span>Overview</span>
+                </div>
+                <div class="nav-item" onclick="activateMode('voice')">
+                    <div class="nav-icon">🎙️</div>
+                    <span>Voice Assistant</span>
+                </div>
+                <div class="nav-item" onclick="activateMode('notes')">
+                    <div class="nav-icon">📝</div>
+                    <span>Notes Mode</span>
+                </div>
+                <div class="nav-item" onclick="activateMode('regular')">
+                    <div class="nav-icon">🖱️</div>
+                    <span>Regular Mouse</span>
+                </div>
+                <div class="nav-item" onclick="activateMode('movie')">
+                    <div class="nav-icon">🎬</div>
+                    <span>Movie Mode</span>
+                </div>
+                
+                <div class="nav-item" onclick="activateMode('presentation')">
+                    <div class="nav-icon">📊</div>
+                    <span>Presentation</span>
+                </div>
+                <div class="nav-item" onclick="activateMode('camera')">
+                    <div class="nav-icon">📷</div>
+                    <span>Camera Mode</span>
+                </div>
+                
+            </nav>
         </div>
-        
-        <div class="mode-card next" data-mode="movie" onclick="selectMode('movie')">
-          <div class="mode-icon">🎬</div>
-          <div class="mode-title">Movie Mode</div>
-          <div class="mode-description">Optimized for media playback and streaming</div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="main-header">
+                <div class="header-title" id="headerTitle">Welcome to AirClick</div>
+                <div class="header-subtitle" id="headerSubtitle">Select a mode from the sidebar to get started</div>
+            </div>
+            
+            <div class="content-area">
+                <!-- Welcome Screen -->
+                <div id="welcomeScreen" class="welcome-screen">
+                    <div class="welcome-icon">🎯</div>
+                    <h1 class="welcome-title">AirClick Control Hub</h1>
+                    <p class="welcome-subtitle">
+                        Transform your computer interaction with AI-powered gesture and voice control. 
+                        Choose from multiple specialized modes designed for different activities.
+                    </p>
+                    
+                    <div class="feature-grid">
+                        <div class="feature-card">
+                            <span class="feature-icon">🎙️</span>
+                            <h3 class="feature-title">Voice Assistant</h3>
+                            <p class="feature-description">AI-powered voice commands for system control, web browsing, and information queries.</p>
+                        </div>
+                        <div class="feature-card">
+                            <span class="feature-icon">📝</span>
+                            <h3 class="feature-title">Notes Mode</h3>
+                            <p class="feature-description">Voice-to-text conversion with direct social media sharing capabilities.</p>
+                        </div>
+                        <div class="feature-card">
+                            <span class="feature-icon">🎬</span>
+                            <h3 class="feature-title">Movie Mode</h3>
+                            <p class="feature-description">Gesture-based media controls optimized for video playback and streaming.</p>
+                        </div>
+                        <div class="feature-card">
+                            <span class="feature-icon">🖱️</span>
+                            <h3 class="feature-title">Regular Mouse</h3>
+                            <p class="feature-description">Standard mouse control with gesture recognition. Move your hand to control the cursor with precision and natural movements.</p>
+                        </div>
+                        <div class="feature-card">
+                            <span class="feature-icon">📊</span>
+                            <h3 class="feature-title">Presentation</h3>
+                            <p class="feature-description">Professional presentation controls with slide navigation and pointer functions.</p>
+                        </div>
+                        <div class="feature-card">
+                            <span class="feature-icon">📷</span>
+                            <h3 class="feature-title">Camera Mode</h3>
+                            <p class="feature-description">Advanced camera controls and gesture-based photo/video capture.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Updated Regular Mode Interface to match reference layout -->
+                <div id="regularInterface" class="mode-control-interface">
+                    <div class="mode-header">
+                        <div class="mode-icon">🖱️</div>
+                        <div class="mode-header-text">
+                            <h2 class="mode-title">Regular Mouse Mode</h2>
+                            <p class="mode-description">Standard gesture-based mouse control</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mode-content-wrapper">
+                        <div class="mode-info-section">
+                            <div class="gesture-instructions">
+                                <h3 class="instructions-title">✨ Available Gestures</h3>
+                                <p class="instructions-subtitle">Control your computer with simple hand movements</p>
+                                <div class="gesture-list">
+                                    <div class="gesture-item">
+                                        <span class="gesture-icon">👆</span>
+                                        <div class="gesture-details">
+                                            <span class="gesture-name">Index Finger Up</span>
+                                            <span class="gesture-action">Move cursor around the screen smoothly and precisely. Perfect for navigation and pointing.</span>
+                                            <span class="action-label">Action: Move Cursor</span>
+                                        </div>
+                                    </div>
+                                    <div class="gesture-item">
+                                        <span class="gesture-icon">✌️</span>
+                                        <div class="gesture-details">
+                                            <span class="gesture-name">Two Fingers Up</span>
+                                            <span class="gesture-action">Perform left mouse click for selection and interaction with interface elements.</span>
+                                            <span class="action-label">Action: Left Click</span>
+                                        </div>
+                                    </div>
+                                    <div class="gesture-item">
+                                        <span class="gesture-icon">🤟</span>
+                                        <div class="gesture-details">
+                                            <span class="gesture-name">Three Fingers Up</span>
+                                            <span class="gesture-action">Perform right mouse click for context menus and additional options.</span>
+                                            <span class="action-label">Action: Right Click</span>
+                                        </div>
+                                    </div>
+                                    <div class="gesture-item">
+                                        <span class="gesture-icon">🖐️</span>
+                                        <div class="gesture-details">
+                                            <span class="gesture-name">Open Palm</span>
+                                            <span class="gesture-action">Scroll up through pages and content smoothly.</span>
+                                            <span class="action-label">Action: Scroll Up</span>
+                                        </div>
+                                    </div>
+                                    <div class="gesture-item">
+                                        <span class="gesture-icon">✊</span>
+                                        <div class="gesture-details">
+                                            <span class="gesture-name">Closed Fist</span>
+                                            <span class="gesture-action">Scroll down through pages and content smoothly.</span>
+                                            <span class="action-label">Action: Scroll Down</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mode-controls-section">
+                            <h3 class="controls-title">🎮 Mode Controls</h3>
+                            <div class="mode-controls">
+                                <button class="control-button start-button" onclick="startMode('regular')">▶ Start Regular Mode</button>
+                                <label class="control-button stop-button" style="cursor: pointer; margin: 0;">
+                                    <input type="checkbox" style="margin-right: 8px;"> Stop Mode
+                                </label>
+                            </div>
+                            <div class="mode-status status-inactive" id="regularStatus">
+                                <span class="status-indicator"></span>
+                                <span>Mode Status:</span>
+                                <span class="status-text">Inactive</span>
+                            </div>
+                            <div class="session-stats">
+                                <div class="stat-item">
+                                    <span class="stat-number">0</span>
+                                    <span class="stat-label">Gestures</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-number">0m</span>
+                                    <span class="stat-label">Session Time</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Updated Movie Mode Interface to match reference layout -->
+                <div id="movieInterface" class="mode-control-interface">
+                    <div class="mode-header">
+                        <div class="mode-icon">🎬</div>
+                        <div class="mode-header-text">
+                            <h2 class="mode-title">Movie Mode</h2>
+                            <p class="mode-description">Gesture controls for seamless video playback experience</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mode-content-wrapper">
+                        <div class="mode-info-section">
+                            <div class="gesture-instructions">
+                                <h3 class="instructions-title">✨ Available Gestures</h3>
+                                <p class="instructions-subtitle">Control your media with simple hand movements</p>
+                                <div class="gesture-list">
+                                    <div class="gesture-item">
+                                        <span class="gesture-icon">👆</span>
+                                        <div class="gesture-details">
+                                            <span class="gesture-name">One Finger Up</span>
+                                            <span class="gesture-action">Raise a single finger to play or pause your video content instantly. Perfect for quick media control without touching any device.</span>
+                                            <span class="action-label">Action: Play/Pause Video</span>
+                                        </div>
+                                    </div>
+                                    <div class="gesture-item">
+                                        <span class="gesture-icon">✌️</span>
+                                        <div class="gesture-details">
+                                            <span class="gesture-name">Two Fingers Up</span>
+                                            <span class="gesture-action">Show the peace sign to fast forward through your video. Great for skipping ahead during presentations or movies.</span>
+                                            <span class="action-label">Action: Fast Forward</span>
+                                        </div>
+                                    </div>
+                                    <div class="gesture-item">
+                                        <span class="gesture-icon">🤟</span>
+                                        <div class="gesture-details">
+                                            <span class="gesture-name">Three Fingers Up</span>
+                                            <span class="gesture-action">Display three fingers to rewind and go back in your video timeline. Useful for reviewing content or going back to missed sections.</span>
+                                            <span class="action-label">Action: Rewind</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mode-controls-section">
+                            <h3 class="controls-title">🎮 Mode Controls</h3>
+                            <div class="mode-controls">
+                                <button class="control-button start-button" onclick="startMode('movie')">▶ Start Movie Mode</button>
+                                <label class="control-button stop-button" style="cursor: pointer; margin: 0;">
+                                    <input type="checkbox" style="margin-right: 8px;"> Stop Mode
+                                </label>
+                            </div>
+                            <div class="mode-status status-active" id="movieStatus">
+                                <span class="status-indicator"></span>
+                                <span>Mode Status:</span>
+                                <span class="status-text">Active</span>
+                            </div>
+                            <div class="session-stats">
+                                <div class="stat-item">
+                                    <span class="stat-number">127</span>
+                                    <span class="stat-label">Gestures</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-number">45m</span>
+                                    <span class="stat-label">Session Time</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Updated Game Mode Interface with proper structure and gesture instructions -->
+                <div id="gameInterface" class="mode-control-interface">
+                    <div class="mode-header">
+                        <div class="mode-icon">🎮</div>
+                        <h2 class="mode-title">Game Mode</h2>
+                        <p class="mode-description">
+                            Enhanced gaming experience with gesture controls. Customizable sensitivity and response settings for different game types.
+                        </p>
+                    </div>
+                    
+                    <div class="mode-content-wrapper">
+                        <div class="mode-info-section">
+                            <div class="gesture-instructions">
+                                <h3 class="instructions-title">Available Gestures</h3>
+                                <div class="gesture-list">
+                                    <div class="gesture-item">
+                                        <span class="gesture-icon">👆</span>
+                                        <div class="gesture-details">
+                                            <span class="gesture-name">Index Finger Up</span>
+                                            <span class="gesture-action">Move game cursor/crosshair</span>
+                                        </div>
+                                    </div>
+                                    <div class="gesture-item">
+                                        <span class="gesture-icon">✌️</span>
+                                        <div class="gesture-details">
+                                            <span class="gesture-name">Two Fingers Up</span>
+                                            <span class="gesture-action">Primary action (shoot/select)</span>
+                                        </div>
+                                    </div>
+                                    <div class="gesture-item">
+                                        <span class="gesture-icon">🤟</span>
+                                        <div class="gesture-details">
+                                            <span class="gesture-name">Three Fingers Up</span>
+                                            <span class="gesture-action">Secondary action (reload/menu)</span>
+                                        </div>
+                                    </div>
+                                    <div class="gesture-item">
+                                        <span class="gesture-icon">🖐️</span>
+                                        <div class="gesture-details">
+                                            <span class="gesture-name">Open Palm</span>
+                                            <span class="gesture-action">Jump or move up</span>
+                                        </div>
+                                    </div>
+                                    <div class="gesture-item">
+                                        <span class="gesture-icon">✊</span>
+                                        <div class="gesture-details">
+                                            <span class="gesture-name">Closed Fist</span>
+                                            <span class="gesture-action">Crouch or move down</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mode-controls-section">
+                            <div class="mode-controls">
+                                <button class="control-button start-button" onclick="startMode('game')">Start Mode</button>
+                                <button class="control-button stop-button" onclick="stopMode('game')" disabled>Stop Mode</button>
+                            </div>
+                            <div class="mode-status status-inactive" id="gameStatus">Mode Inactive</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Updated Presentation Mode Interface with proper header structure -->
+                <div id="presentationInterface" class="mode-control-interface">
+                    <div class="mode-header">
+                        <div class="mode-icon">📊</div>
+                        <h2 class="mode-title">Presentation Mode</h2>
+                        <p class="mode-description">
+                            Professional presentation controls with slide navigation, pointer functions, and gesture-based interactions for seamless presentations.
+                        </p>
+                    </div>
+                    
+                    <div class="mode-content-wrapper">
+                        <div class="mode-info-section">
+                            <div class="gesture-instructions">
+                                <h3 class="instructions-title">Available Gestures</h3>
+                                <div class="gesture-list">
+                                    <div class="gesture-item">
+                                        <span class="gesture-icon">🖐️</span>
+                                        <div class="gesture-details">
+                                            <span class="gesture-name">Five Fingers Open</span>
+                                            <span class="gesture-action">Start the presentation</span>
+                                        </div>
+                                    </div>
+                                    <div class="gesture-item">
+                                        <span class="gesture-icon">✊</span>
+                                        <div class="gesture-details">
+                                            <span class="gesture-name">Closed Fist</span>
+                                            <span class="gesture-action">Exit the presentation</span>
+                                        </div>
+                                    </div>
+                                    <div class="gesture-item">
+                                        <span class="gesture-icon">👆</span>
+                                        <div class="gesture-details">
+                                            <span class="gesture-name">Index Finger Up</span>
+                                            <span class="gesture-action">Go to next slide</span>
+                                        </div>
+                                    </div>
+                                    <div class="gesture-item">
+                                        <span class="gesture-icon">✌️</span>
+                                        <div class="gesture-details">
+                                            <span class="gesture-name">Index + Middle Finger</span>
+                                            <span class="gesture-action">Go to previous slide</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mode-controls-section">
+                            <div class="mode-controls">
+                                <button class="control-button start-button" onclick="startMode('presentation')">Start Mode</button>
+                                <button class="control-button stop-button" onclick="stopMode('presentation')" disabled>Stop Mode</button>
+                            </div>
+                            <div class="mode-status status-inactive" id="presentationStatus">Mode Inactive</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Updated Camera Mode Interface with side-by-side layout -->
+                <div id="cameraInterface" class="mode-control-interface">
+                    <div class="mode-header">
+                        <div class="mode-icon">📷</div>
+                        <h2 class="mode-title">Camera Mode</h2>
+                        <p class="mode-description">
+                            Advanced camera controls with gesture-based photo and video capture. Perfect for hands-free photography and content creation.
+                        </p>
+                    </div>
+                    
+                    <div class="mode-content-wrapper">
+                        <div class="mode-info-section">
+                            <div class="gesture-instructions">
+                                <h3 class="instructions-title">Available Gestures</h3>
+                                <div class="gesture-list">
+                                    <div class="gesture-item">
+                                        <span class="gesture-icon">✌️</span>
+                                        <div class="gesture-details">
+                                            <span class="gesture-name">Two Fingers Up</span>
+                                            <span class="gesture-action">Take a photo</span>
+                                        </div>
+                                    </div>
+                                    <div class="gesture-item">
+                                        <span class="gesture-icon">🤟</span>
+                                        <div class="gesture-details">
+                                            <span class="gesture-name">Three Fingers Up</span>
+                                            <span class="gesture-action">Start video recording</span>
+                                        </div>
+                                    </div>
+                                    <div class="gesture-item">
+                                        <span class="gesture-icon">👆</span>
+                                        <div class="gesture-details">
+                                            <span class="gesture-name">One Finger Up</span>
+                                            <span class="gesture-action">Stop video recording</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mode-controls-section">
+                            <div class="mode-controls">
+                                <button class="control-button start-button" onclick="startMode('camera')">Start Mode</button>
+                                <button class="control-button stop-button" onclick="stopMode('camera')" disabled>Stop Mode</button>
+                            </div>
+                            <div class="mode-status status-inactive" id="cameraStatus">Mode Inactive</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Updated WebSocket/AI Server Mode Interface with proper structure and gesture instructions -->
+                <div id="websocketInterface" class="mode-control-interface">
+                    <div class="mode-header">
+                        <div class="mode-icon">🔌</div>
+                        <h2 class="mode-title">AI Server Mode</h2>
+                        <p class="mode-description">
+                            Advanced AI-powered hand detection server with WebSocket connectivity for real-time gesture processing and external integrations.
+                        </p>
+                    </div>
+                    
+                    <div class="mode-content-wrapper">
+                        <div class="mode-info-section">
+                            <div class="gesture-instructions">
+                                <h3 class="instructions-title">Available Gestures</h3>
+                                <div class="gesture-list">
+                                    <div class="gesture-item">
+                                        <span class="gesture-icon">👆</span>
+                                        <div class="gesture-details">
+                                            <span class="gesture-name">Index Finger Up</span>
+                                            <span class="gesture-action">Send cursor position data</span>
+                                        </div>
+                                    </div>
+                                    <div class="gesture-item">
+                                        <span class="gesture-icon">✌️</span>
+                                        <div class="gesture-details">
+                                            <span class="gesture-name">Two Fingers Up</span>
+                                            <span class="gesture-action">Trigger click event via WebSocket</span>
+                                        </div>
+                                    </div>
+                                    <div class="gesture-item">
+                                        <span class="gesture-icon">🤟</span>
+                                        <div class="gesture-details">
+                                            <span class="gesture-name">Three Fingers Up</span>
+                                            <span class="gesture-action">Send custom gesture data</span>
+                                        </div>
+                                    </div>
+                                    <div class="gesture-item">
+                                        <span class="gesture-icon">🖐️</span>
+                                        <div class="gesture-details">
+                                            <span class="gesture-name">Open Palm</span>
+                                            <span class="gesture-action">Broadcast hand landmarks</span>
+                                        </div>
+                                    </div>
+                                    <div class="gesture-item">
+                                        <span class="gesture-icon">✊</span>
+                                        <div class="gesture-details">
+                                            <span class="gesture-name">Closed Fist</span>
+                                            <span class="gesture-action">Stop data transmission</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mode-controls-section">
+                            <div class="mode-controls">
+                                <button class="control-button start-button" onclick="startMode('websocket')">Start Mode</button>
+                                <button class="control-button stop-button" onclick="stopMode('websocket')" disabled>Stop Mode</button>
+                            </div>
+                            <div class="mode-status status-inactive" id="websocketStatus">Mode Inactive</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Voice Interface (unchanged) -->
+                <div id="voiceInterface" class="voice-interface">
+                    <div class="chat-container">
+                        <div class="chat-messages" id="chatMessages">
+                            <!-- Messages will be added here dynamically -->
+                        </div>
+                    </div>
+                    
+                    <div class="voice-controls">
+                        <button class="voice-button clear-button" onclick="clearVoiceChat()" title="Clear Chat">
+                            🗑️
+                        </button>
+                        <button class="voice-button mic-button" id="micButton" onclick="toggleVoiceListening()" title="Start/Stop Listening">
+                            🎤
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Notes Interface (unchanged) -->
+                <div id="notesInterface" class="notes-interface">
+                    <div class="notes-header">
+                        <h2 class="notes-title">Voice Notes & Social Sharing</h2>
+                        <div class="notes-controls">
+                            <button class="notes-button secondary-button" onclick="clearNotes()">Clear</button>
+                            <button class="notes-button primary-button" onclick="saveNote()">Save Note</button>
+                        </div>
+                    </div>
+                    
+                    <div class="notes-content">
+                        <div class="notes-input-section">
+                            <textarea 
+                                id="notesTextarea" 
+                                class="notes-textarea" 
+                                placeholder="Start typing your notes here, or use voice-to-text below..."
+                            ></textarea>
+                            
+                            <div class="voice-to-text-controls">
+                                <button class="voice-text-button primary-button" id="voiceToTextButton" onclick="toggleVoiceToText()">
+                                    🎤 Start Voice Input
+                                </button>
+                                <span id="voiceStatus" style="color: #8892b0; font-size: 14px;">Click to start voice input</span>
+                            </div>
+                        </div>
+                        
+                        <div class="social-sharing">
+                            <h3 class="social-title">Share to Social Media</h3>
+                            <div class="social-buttons">
+                                <button class="social-button whatsapp" onclick="shareToSocial('whatsapp')">
+                                    📱 WhatsApp
+                                </button>
+                                <button class="social-button twitter" onclick="shareToSocial('twitter')">
+                                    🐦 Twitter
+                                </button>
+                                <button class="social-button facebook" onclick="shareToSocial('facebook')">
+                                    📘 Facebook
+                                </button>
+                                <button class="social-button instagram" onclick="shareToSocial('instagram')">
+                                    📷 Instagram
+                                </button>
+                                <button class="social-button linkedin" onclick="shareToSocial('linkedin')">
+                                    💼 LinkedIn
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        
-        <div class="mode-card hidden" data-mode="game" onclick="selectMode('game')">
-          <div class="mode-icon">🎮</div>
-          <div class="mode-title">Game Mode</div>
-          <div class="mode-description">Enhanced precision for gaming applications</div>
-        </div>
-        
-        <div class="mode-card hidden" data-mode="presentation" onclick="selectMode('presentation')">
-          <div class="mode-icon">📊</div>
-          <div class="mode-title">Presentation Mode</div>
-          <div class="mode-description">Perfect for presentations and public speaking</div>
-        </div>
-        
-        <div class="mode-card hidden" data-mode="camera" onclick="selectMode('camera')">
-          <div class="mode-icon">📷</div>
-          <div class="mode-title">Camera Mode</div>
-          <div class="mode-description">Take photos (2 fingers) or videos (3 fingers)</div>
-        </div>
-        
-        <div class="mode-card hidden" data-mode="websocket" onclick="startWebSocketServer()">
-          <div class="mode-icon">🔌</div>
-          <div class="mode-title">AI Server</div>
-          <div class="mode-description">Start Python WebSocket server for AI detection</div>
-        </div>
-      </div>
     </div>
 
-    <div class="mode-indicators" id="indicators">
-      <div class="indicator active" onclick="goToSlide(0)"></div>
-      <div class="indicator" onclick="goToSlide(1)"></div>
-      <div class="indicator" onclick="goToSlide(2)"></div>
-      <div class="indicator" onclick="goToSlide(3)"></div>
-      <div class="indicator" onclick="goToSlide(4)"></div>
-      <div class="indicator" onclick="goToSlide(5)"></div>
-    </div>
+    <script>
+        let currentMode = null;
+        let voiceRecognition = null;
+        let isListening = false;
+        let notesVoiceRecognition = null;
+        let isNotesListening = false;
+        let modeStates = {
+            regular: false,
+            movie: false,
+            game: false,
+            presentation: false,
+            camera: false,
+            websocket: false
+        };
 
-                   <div class="action-buttons" id="action-buttons">
-        <button class="action-btn close-btn" id="close-btn" onclick="closeCurrentMode()">
-          ✖ Close Mode
-        </button>
-                 <div class="game-options" id="game-options">
-            <h3 style="color: #fff; margin-bottom: 15px; text-align: center;">🎮 Choose Your Game:</h3>
-            <button class="game-option-btn" onclick="openDinoGame()">
-              🦕 Dino Fist Game (AI)
-            </button>
-            <button class="game-option-btn" onclick="openDinoGesture()">
-              👆 Dino Gesture Game (Browser)
-            </button>
-          </div>
-      </div>
-  </div>
+        // Initialize speech recognition
+        if ('webkitSpeechRecognition' in window) {
+            voiceRecognition = new webkitSpeechRecognition();
+            voiceRecognition.continuous = false;
+            voiceRecognition.interimResults = false;
+            voiceRecognition.lang = 'en-US';
 
-     <div class="notification" id="notification"></div>
-   
-   <!-- Instruction Modal -->
-   <div class="instruction-modal" id="instructionModal">
-     <div class="instruction-content">
-       <div class="instruction-header">
-         <div class="instruction-title" id="instructionTitle">Mode Instructions</div>
-         <div class="instruction-subtitle" id="instructionSubtitle">Learn how to use this mode</div>
-       </div>
-       <ul class="instruction-list" id="instructionList">
-         <!-- Instructions will be populated by JavaScript -->
-       </ul>
-       <button class="instruction-close" onclick="closeInstructionModal()">Got it! Start Mode</button>
-     </div>
-   </div>
-   
-   <footer>
-     &copy; 2025 Sourabh | All rights reserved
-   </footer>
+            voiceRecognition.onresult = function(event) {
+                const command = event.results[0][0].transcript;
+                addVoiceMessage(command, 'user');
+                processVoiceCommand(command);
+            };
 
-  <script>
-         let currentSlide = 0;
-     let currentMode = null;
-     let pendingMode = null;
-     const totalSlides = 6;
-     const modes = ['regular', 'movie', 'game', 'presentation', 'camera', 'websocket'];
+            voiceRecognition.onerror = function(event) {
+                console.error('Speech recognition error:', event.error);
+                showNotification('Speech recognition error: ' + event.error, 'error');
+                stopVoiceListening();
+            };
 
-     // Instruction data for each mode
-     const modeInstructions = {
-       regular: {
-         title: "🖱️ Regular Mouse Mode",
-         subtitle: "Control your mouse with hand gestures",
-         instructions: [
-           { icon: "👆", text: "Point with index finger to move cursor" },
-           { icon: "✋", text: "Show all 4 fingers to move cursor freely" },
-           { icon: "☝️", text: "Index finger only = Left Click" },
-           { icon: "✌️", text: "Index + Middle finger = Right Click" },
-           { icon: "👍", text: "Thumb only = Scroll Up" },
-           { icon: "👎", text: "Index only = Scroll Down" },
-           { icon: "✊", text: "Make a fist = Take Screenshot" }
-         ]
-       },
-       movie: {
-         title: "🎬 Movie Mode",
-         subtitle: "Control media playback with gestures",
-         instructions: [
-           { icon: "☝️", text: "1 finger = Play/Pause" },
-           { icon: "✌️", text: "2 fingers = Fast Forward" },
-           { icon: "🤟", text: "3 fingers = Rewind" },
-           { icon: "📺", text: "Works with YouTube, Netflix, and other media players" }
-         ]
-       },
-       game: {
-         title: "🎮 Game Mode",
-         subtitle: "Play the Dino Game with AI-powered gesture detection",
-         instructions: [
-           { icon: "🦕", text: "The game will open in a new tab" },
-           { icon: "✊", text: "Make a FIST to make the dino jump" },
-           { icon: "🤖", text: "Uses Python AI with MediaPipe for accurate detection" },
-           { icon: "📷", text: "Enable camera access when prompted" },
-           { icon: "🎯", text: "Jump over obstacles to score points" }
-         ]
-       },
-       presentation: {
-         title: "📊 Presentation Mode",
-         subtitle: "Control presentations with hand gestures",
-         instructions: [
-           { icon: "🖐️", text: "5 fingers = Start/Fullscreen Presentation" },
-           { icon: "✊", text: "Fist (0 fingers) = Exit Presentation" },
-           { icon: "☝️", text: "Index finger only = Next Slide" },
-           { icon: "✌️", text: "Index + Middle finger = Previous Slide" },
-           { icon: "📱", text: "Works with PowerPoint, Google Slides, and more" }
-         ]
-       },
-       camera: {
-         title: "📷 Camera Mode",
-         subtitle: "Take photos and record videos with gestures",
-         instructions: [
-           { icon: "✌️", text: "2 fingers = Take Photo" },
-           { icon: "🤟", text: "3 fingers = Start Recording" },
-           { icon: "☝️", text: "1 finger = Stop Recording" },
-           { icon: "💾", text: "Files saved automatically with timestamps" },
-           { icon: "📁", text: "Check your project folder for saved files" }
-         ]
-       },
-       websocket: {
-         title: "🔌 AI Server Mode",
-         subtitle: "Start the Python WebSocket server for AI detection",
-         instructions: [
-           { icon: "🐍", text: "Starts Python WebSocket server on localhost:8765" },
-           { icon: "🤖", text: "Enables AI-powered gesture detection for games" },
-           { icon: "📡", text: "Server runs in background for real-time processing" },
-           { icon: "🛑", text: "Click 'Stop AI Server' to close the server" },
-           { icon: "⚡", text: "Required for advanced gesture recognition features" }
-         ]
-       }
-     };
+            voiceRecognition.onend = function() {
+                stopVoiceListening();
+            };
 
-    function navigateCarousel(direction) {
-      currentSlide = (currentSlide + direction + totalSlides) % totalSlides;
-      updateCarousel();
-    }
+            // Notes voice recognition
+            notesVoiceRecognition = new webkitSpeechRecognition();
+            notesVoiceRecognition.continuous = true;
+            notesVoiceRecognition.interimResults = true;
+            notesVoiceRecognition.lang = 'en-US';
 
-    function goToSlide(slideIndex) {
-      currentSlide = slideIndex;
-      updateCarousel();
-    }
+            notesVoiceRecognition.onresult = function(event) {
+                let finalTranscript = '';
+                let interimTranscript = '';
 
-    function updateCarousel() {
-      const cards = document.querySelectorAll('.mode-card');
-      const indicators = document.querySelectorAll('.indicator');
-      
-      cards.forEach((card, index) => {
-        card.classList.remove('active', 'prev', 'next', 'hidden');
-        
-        if (index === currentSlide) {
-          card.classList.add('active');
-        } else if (index === (currentSlide - 1 + totalSlides) % totalSlides) {
-          card.classList.add('prev');
-        } else if (index === (currentSlide + 1) % totalSlides) {
-          card.classList.add('next');
-        } else {
-          card.classList.add('hidden');
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const transcript = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) {
+                        finalTranscript += transcript;
+                    } else {
+                        interimTranscript += transcript;
+                    }
+                }
+
+                const textarea = document.getElementById('notesTextarea');
+                if (finalTranscript) {
+                    textarea.value += finalTranscript + ' ';
+                }
+            };
+
+            notesVoiceRecognition.onerror = function(event) {
+                console.error('Notes speech recognition error:', event.error);
+                showNotification('Voice input error: ' + event.error, 'error');
+                stopNotesVoiceToText();
+            };
         }
-      });
-      
-      indicators.forEach((indicator, index) => {
-        indicator.classList.toggle('active', index === currentSlide);
-      });
-    }
 
-    function selectMode(mode) {
-      console.log('Selecting mode:', mode);
-      pendingMode = mode;
-      showInstructionModal(mode);
-    }
+        function showNotification(message, type = 'success') {
+            // Remove existing notifications
+            const existingNotifications = document.querySelectorAll('.notification');
+            existingNotifications.forEach(notification => notification.remove());
 
-    function showInstructionModal(mode) {
-      const modal = document.getElementById('instructionModal');
-      const title = document.getElementById('instructionTitle');
-      const subtitle = document.getElementById('instructionSubtitle');
-      const list = document.getElementById('instructionList');
-      
-      const instructions = modeInstructions[mode];
-      if (!instructions) return;
-      
-      title.textContent = instructions.title;
-      subtitle.textContent = instructions.subtitle;
-      
-      // Clear and populate instruction list
-      list.innerHTML = '';
-      instructions.instructions.forEach(instruction => {
-        const li = document.createElement('li');
-        li.innerHTML = `
-          <span class="instruction-icon">${instruction.icon}</span>
-          <span class="instruction-text">${instruction.text}</span>
-        `;
-        list.appendChild(li);
-      });
-      
-      modal.style.display = 'flex';
-    }
+            // Create new notification
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
 
-    function closeInstructionModal() {
-      const modal = document.getElementById('instructionModal');
-      modal.style.display = 'none';
-      
-      // Start the mode after closing instructions
-      if (pendingMode) {
-        startMode(pendingMode);
-        pendingMode = null;
-      }
-    }
+            // Show notification
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 100);
 
-    function startMode(mode) {
-      console.log('Starting mode:', mode);
-      
-      // Special handling for game mode - open the game directly
-      if (mode === 'game') {
-        window.open('/dino-game', '_blank');
-        showNotification('Opening Dino Game in new tab...', 'success');
-        updateUI('game');
-        return;
-      }
-      
-      // Special handling for websocket server
-      if (mode === 'websocket') {
-        fetch('/start-websocket-server', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' }
-        })
-        .then(res => res.json())
-        .then(data => {
-          showNotification(data.message, data.status);
-          if (data.status === 'success') {
-            updateUI('websocket');
-          } else {
-            // Even if server fails to start, show the UI for manual control
-            updateUI('websocket');
-          }
-        })
-        .catch(err => {
-          showNotification("Error: " + err, 'error');
-          // Show UI even if there's an error
-          updateUI('websocket');
+            // Hide notification after 3 seconds
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            }, 3000);
+        }
+
+        function showWelcome() {
+            setActiveNavItem(0);
+            hideAllInterfaces();
+            document.getElementById('welcomeScreen').style.display = 'flex';
+            updateHeader('Welcome to AirClick', 'Select a mode from the sidebar to get started');
+        }
+
+        function activateMode(mode) {
+            currentMode = mode;
+            hideAllInterfaces();
+            
+            if (mode === 'voice') {
+                setActiveNavItem(1);
+                document.getElementById('voiceInterface').classList.add('active');
+                updateHeader('Voice Assistant', 'Your AI-powered voice companion');
+                initializeVoiceMode();
+            } else if (mode === 'notes') {
+                setActiveNavItem(2);
+                document.getElementById('notesInterface').classList.add('active');
+                updateHeader('Notes Mode', 'Voice-to-text notes and social media messaging');
+                initializeNotesMode();
+            } else {
+                const modeIndexMap = {
+                    'regular': 3,
+                    'movie': 4,
+                    'presentation': 5,
+                    'camera': 6
+                };
+                const modeIndex = modeIndexMap[mode];
+                if (modeIndex !== undefined) {
+                    setActiveNavItem(modeIndex);
+                }
+                showModeControlInterface(mode);
+            }
+        }
+
+        function showModeControlInterface(mode) {
+            const interfaceId = mode + 'Interface';
+            const interface = document.getElementById(interfaceId);
+            if (interface) {
+                interface.classList.add('active');
+                
+                // Update header based on mode
+                const modeInfo = {
+                    regular: { title: 'Regular Mouse Mode', subtitle: 'Standard gesture-based mouse control' },
+                    movie: { title: 'Movie Mode', subtitle: 'Gesture controls for video playback' },
+                    game: { title: 'Game Mode', subtitle: 'Enhanced gaming with gesture controls' },
+                    presentation: { title: 'Presentation Mode', subtitle: 'Professional presentation controls' },
+                    camera: { title: 'Camera Mode', subtitle: 'Gesture-based photo and video capture' },
+                    websocket: { title: 'AI Server Mode', subtitle: 'Advanced AI-powered hand detection server' }
+                };
+                
+                updateHeader(modeInfo[mode].title, modeInfo[mode].subtitle);
+            }
+        }
+
+        function startMode(mode) {
+            fetch('/run', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ mode: mode })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    modeStates[mode] = true;
+                    updateModeUI(mode, true);
+                    showNotification(`${mode.charAt(0).toUpperCase() + mode.slice(1)} Mode started successfully!`, 'success');
+                } else {
+                    showNotification(`Failed to start ${mode} mode: ${data.message}`, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error starting mode:', error);
+                showNotification(`Error starting ${mode} mode`, 'error');
+            });
+        }
+
+        function stopMode(mode) {
+            fetch('/stop_mode', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ mode: mode })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    modeStates[mode] = false;
+                    updateModeUI(mode, false);
+                    showNotification(`${mode.charAt(0).toUpperCase() + mode.slice(1)} Mode stopped successfully!`, 'success');
+                    
+                    if (mode === 'camera') {
+                        // Stop any video streams
+                        const videoElements = document.querySelectorAll('video');
+                        videoElements.forEach(video => {
+                            if (video.srcObject) {
+                                const tracks = video.srcObject.getTracks();
+                                tracks.forEach(track => track.stop());
+                                video.srcObject = null;
+                            }
+                        });
+                    }
+                } else {
+                    showNotification(`Failed to stop ${mode} mode: ${data.error}`, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error stopping mode:', error);
+                showNotification(`Error stopping ${mode} mode`, 'error');
+            });
+        }
+
+        function updateModeUI(mode, isActive) {
+            const startButton = document.querySelector(`#${mode}Interface .start-button`);
+            const stopButton = document.querySelector(`#${mode}Interface .stop-button`);
+            const status = document.getElementById(`${mode}Status`);
+
+            if (isActive) {
+                startButton.disabled = true;
+                stopButton.disabled = false;
+                status.textContent = 'Mode Active';
+                status.className = 'mode-status status-active';
+            } else {
+                startButton.disabled = false;
+                stopButton.disabled = true;
+                status.textContent = 'Mode Inactive';
+                status.className = 'mode-status status-inactive';
+            }
+        }
+
+        function setActiveNavItem(index) {
+            document.querySelectorAll('.nav-item').forEach((item, i) => {
+                item.classList.toggle('active', i === index);
+            });
+        }
+
+        function hideAllInterfaces() {
+            document.getElementById('welcomeScreen').style.display = 'none';
+            document.getElementById('voiceInterface').classList.remove('active');
+            document.getElementById('notesInterface').classList.remove('active');
+            document.getElementById('regularInterface').classList.remove('active');
+            document.getElementById('movieInterface').classList.remove('active');
+            document.getElementById('gameInterface').classList.remove('active');
+            document.getElementById('presentationInterface').classList.remove('active');
+            document.getElementById('cameraInterface').classList.remove('active');
+            document.getElementById('websocketInterface').classList.remove('active');
+        }
+
+        function updateHeader(title, subtitle) {
+            document.getElementById('headerTitle').textContent = title;
+            document.getElementById('headerSubtitle').textContent = subtitle;
+        }
+
+        // Voice Mode Functions
+        function initializeVoiceMode() {
+            setTimeout(() => {
+                addVoiceMessage("Hello! I'm your AI voice assistant. How can I help you today?", 'bot');
+                speakWithFemaleVoice("Hello! I'm your AI voice assistant. How can I help you today?");
+            }, 500);
+        }
+
+        function toggleVoiceListening() {
+            if (!voiceRecognition) {
+                showNotification('Speech recognition not supported', 'error');
+                return;
+            }
+
+            if (isListening) {
+                stopVoiceListening();
+            } else {
+                startVoiceListening();
+            }
+        }
+
+        function startVoiceListening() {
+            if (!voiceRecognition || isListening) return;
+
+            try {
+                voiceRecognition.start();
+                isListening = true;
+                document.getElementById('micButton').classList.add('listening');
+                addVoiceMessage("Listening...", 'system');
+            } catch (error) {
+                console.error('Error starting voice recognition:', error);
+                showNotification('Error starting voice recognition', 'error');
+            }
+        }
+
+        function stopVoiceListening() {
+            if (!voiceRecognition || !isListening) return;
+
+            try {
+                voiceRecognition.stop();
+                isListening = false;
+                document.getElementById('micButton').classList.remove('listening');
+                
+                // Remove "Listening..." message
+                const messages = document.getElementById('chatMessages');
+                const lastMessage = messages.lastElementChild;
+                if (lastMessage && lastMessage.textContent.includes('Listening...')) {
+                    lastMessage.remove();
+                }
+            } catch (error) {
+                console.error('Error stopping voice recognition:', error);
+            }
+        }
+
+        function addVoiceMessage(message, sender) {
+            const messagesContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'message-avatar';
+            avatar.textContent = sender === 'bot' ? '🤖' : sender === 'user' ? '👤' : '🔊';
+            
+            const content = document.createElement('div');
+            content.className = 'message-content';
+            content.textContent = message;
+            
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(content);
+            messagesContainer.appendChild(messageDiv);
+            
+            // Scroll to bottom
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function processVoiceCommand(command) {
+            fetch('/process-voice-command', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ command: command })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.response) {
+                    addVoiceMessage(data.response, 'bot');
+                    speakWithFemaleVoice(data.response);
+                } else if (data.error) {
+                    addVoiceMessage('Sorry, I encountered an error: ' + data.error, 'bot');
+                }
+            })
+            .catch(error => {
+                console.error('Error processing voice command:', error);
+                addVoiceMessage('Sorry, I encountered an error processing your command.', 'bot');
+            });
+        }
+
+        function speakWithFemaleVoice(text) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                const voices = speechSynthesis.getVoices();
+                
+                // Try to find a female voice
+                const femaleVoice = voices.find(voice => 
+                    voice.name.toLowerCase().includes('female') || 
+                    voice.name.toLowerCase().includes('zira') ||
+                    voice.name.toLowerCase().includes('samantha')
+                );
+                
+                if (femaleVoice) {
+                    utterance.voice = femaleVoice;
+                }
+                
+                utterance.rate = 0.9;
+                utterance.pitch = 1.1;
+                speechSynthesis.speak(utterance);
+            }
+        }
+
+        function clearVoiceChat() {
+            document.getElementById('chatMessages').innerHTML = '';
+            addVoiceMessage("Chat cleared. How can I help you?", 'bot');
+        }
+
+        // Notes Mode Functions
+        function initializeNotesMode() {
+            // Initialize notes mode if needed
+        }
+
+        function toggleVoiceToText() {
+            if (!notesVoiceRecognition) {
+                showNotification('Speech recognition not supported', 'error');
+                return;
+            }
+
+            if (isNotesListening) {
+                stopNotesVoiceToText();
+            } else {
+                startNotesVoiceToText();
+            }
+        }
+
+        function startNotesVoiceToText() {
+            if (!notesVoiceRecognition || isNotesListening) return;
+
+            try {
+                notesVoiceRecognition.start();
+                isNotesListening = true;
+                const button = document.getElementById('voiceToTextButton');
+                button.classList.add('listening');
+                button.innerHTML = '🛑 Stop Voice Input';
+                document.getElementById('voiceStatus').textContent = 'Listening... Speak now';
+            } catch (error) {
+                console.error('Error starting notes voice recognition:', error);
+                showNotification('Error starting voice input', 'error');
+            }
+        }
+
+        function stopNotesVoiceToText() {
+            if (!notesVoiceRecognition || !isNotesListening) return;
+
+            try {
+                notesVoiceRecognition.stop();
+                isNotesListening = false;
+                const button = document.getElementById('voiceToTextButton');
+                button.classList.remove('listening');
+                button.innerHTML = '🎤 Start Voice Input';
+                document.getElementById('voiceStatus').textContent = 'Click to start voice input';
+            } catch (error) {
+                console.error('Error stopping notes voice recognition:', error);
+            }
+        }
+
+        function clearNotes() {
+            document.getElementById('notesTextarea').value = '';
+            showNotification('Notes cleared', 'success');
+        }
+
+        function saveNote() {
+            const text = document.getElementById('notesTextarea').value.trim();
+            if (!text) {
+                showNotification('Please enter some text before saving', 'error');
+                return;
+            }
+
+            fetch('/save-note', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ text: text })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification(`Note saved as ${data.filename}`, 'success');
+                } else {
+                    showNotification('Error saving note: ' + data.error, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error saving note:', error);
+                showNotification('Error saving note', 'error');
+            });
+        }
+
+        function shareToSocial(platform) {
+            const text = document.getElementById('notesTextarea').value.trim();
+            if (!text) {
+                showNotification('Please enter some text before sharing', 'error');
+                return;
+            }
+
+            fetch('/send-to-social', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ text: text, platform: platform })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification(data.message, 'success');
+                } else {
+                    showNotification('Error sharing to ' + platform + ': ' + data.error, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error sharing to social media:', error);
+                showNotification('Error sharing to ' + platform, 'error');
+            });
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            showWelcome();
         });
-        return;
-      }
-      
-      fetch('/run', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mode })
-      })
-      .then(res => res.json())
-      .then(data => {
-        console.log('Mode response:', data);
-        showNotification(data.message, 'success');
-        updateUI(data.active);
-      })
-      .catch(err => {
-        console.error('Mode selection error:', err);
-        showNotification("Error: " + err, 'error');
-      });
-    }
-
-    function closeCurrentMode() {
-      if (!currentMode) return;
-      
-      // Special handling for websocket server
-      if (currentMode === 'websocket') {
-        fetch('/stop-websocket-server', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' }
-        })
-        .then(res => res.json())
-        .then(data => {
-          showNotification(data.message, 'info');
-          updateUI(null);
-        })
-        .catch(err => {
-          showNotification("Error: " + err, 'error');
-        });
-        return;
-      }
-      
-      fetch('/close', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mode: currentMode })
-      })
-      .then(res => res.json())
-      .then(data => {
-        showNotification(data.message, 'info');
-        updateUI(null);
-      })
-      .catch(err => {
-        showNotification("Error: " + err, 'error');
-      });
-    }
-
-    function updateUI(activeMode) {
-      console.log('Updating UI for mode:', activeMode);
-      const closeBtn = document.getElementById('close-btn');
-      const gameOptions = document.getElementById('game-options');
-      
-      if (activeMode) {
-        console.log('Activating mode:', activeMode);
-        closeBtn.classList.add('visible');
-        currentMode = activeMode;
-        
-        // Update close button text based on mode
-        if (activeMode === 'websocket') {
-          closeBtn.textContent = '✖ Stop AI Server';
-        } else if (activeMode === 'game') {
-          closeBtn.textContent = '✖ Close Game Mode';
-        } else {
-          closeBtn.textContent = '✖ Close Mode';
-        }
-        
-        if (activeMode === 'game') {
-          console.log('Showing game options');
-          gameOptions.style.display = 'block';
-          // Add animation for game options
-          setTimeout(() => {
-            gameOptions.style.opacity = '1';
-            gameOptions.style.transform = 'translateY(0)';
-          }, 100);
-        } else {
-          console.log('Hiding game options');
-          gameOptions.style.display = 'none';
-          gameOptions.style.opacity = '0';
-          gameOptions.style.transform = 'translateY(20px)';
-        }
-      } else {
-        console.log('Deactivating all modes');
-        closeBtn.classList.remove('visible');
-        gameOptions.style.display = 'none';
-        gameOptions.style.opacity = '0';
-        gameOptions.style.transform = 'translateY(20px)';
-        currentMode = null;
-      }
-    }
-
-    function openDinoGame() {
-      window.open('/dino-game', '_blank');
-      showNotification('Opening Dino Fist Game (AI) in new tab...', 'info');
-    }
-
-    function openDinoGesture() {
-      window.open('/dino-gesture', '_blank');
-      showNotification('Opening Dino Gesture Game (Browser) in new tab...', 'info');
-    }
-
-
-
-    function startWebSocketServer() {
-      pendingMode = 'websocket';
-      showInstructionModal('websocket');
-    }
-
-    function showNotification(message, type = 'info') {
-      const notification = document.getElementById('notification');
-      notification.textContent = message;
-      notification.style.display = 'block';
-      
-      if (type === 'success') {
-        notification.style.borderLeftColor = '#4caf50';
-      } else if (type === 'error') {
-        notification.style.borderLeftColor = '#f44336';
-      } else {
-        notification.style.borderLeftColor = '#00bcd4';
-      }
-      
-      setTimeout(() => {
-        notification.style.display = 'none';
-      }, 3000);
-    }
-
-    // Keyboard navigation
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'ArrowLeft') {
-        navigateCarousel(-1);
-      } else if (e.key === 'ArrowRight') {
-        navigateCarousel(1);
-      }
-    });
-
-    // Touch/swipe support
-    let touchStartX = 0;
-    let touchEndX = 0;
-
-    document.addEventListener('touchstart', e => {
-      touchStartX = e.changedTouches[0].screenX;
-    });
-
-    document.addEventListener('touchend', e => {
-      touchEndX = e.changedTouches[0].screenX;
-      handleSwipe();
-    });
-
-    function handleSwipe() {
-      const swipeThreshold = 50;
-      const diff = touchStartX - touchEndX;
-      
-      if (Math.abs(diff) > swipeThreshold) {
-        if (diff > 0) {
-          navigateCarousel(1); // Swipe left
-        } else {
-          navigateCarousel(-1); // Swipe right
-        }
-      }
-    }
-
-    // Auto-rotate carousel (optional)
-    let autoRotateInterval;
-    
-    function startAutoRotate() {
-      autoRotateInterval = setInterval(() => {
-        if (!currentMode) { // Only auto-rotate when no mode is active
-          navigateCarousel(1);
-        }
-      }, 5000);
-    }
-
-    function stopAutoRotate() {
-      clearInterval(autoRotateInterval);
-    }
-
-    // Check for active mode on page load
-    window.onload = function() {
-      fetch('/status')
-        .then(res => res.json())
-        .then(data => {
-          if (data.active) {
-            updateUI(data.active);
-          }
-        })
-        .catch(err => console.log('Could not fetch status'));
-      
-      // Start auto-rotation
-      startAutoRotate();
-    };
-
-         // Pause auto-rotation on hover
-     document.querySelector('.carousel-container').addEventListener('mouseenter', stopAutoRotate);
-     document.querySelector('.carousel-container').addEventListener('mouseleave', startAutoRotate);
-
-     // Close instruction modal when clicking outside
-     document.getElementById('instructionModal').addEventListener('click', function(e) {
-       if (e.target === this) {
-         closeInstructionModal();
-       }
-     });
-  </script>
+    </script>
 </body>
 </html>

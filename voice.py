@@ -12,6 +12,27 @@ import psutil
 from gtts import gTTS
 from playsound import playsound
 import threading
+from datetime import date, timedelta
+
+# ---------------- CITY MAPPINGS ----------------
+CITY_CODES_FLIGHT = {
+    "delhi": "DEL",
+    "bangalore": "BLR",
+    "mumbai": "BOM",
+    "pune": "PNQ",
+    "chennai": "MAA",
+    "hyderabad": "HYD",
+}
+
+CITY_SLUGS_BUS = {
+    "delhi": "delhi",
+    "bangalore": "bangalore",
+    "mumbai": "mumbai",
+    "pune": "pune",
+    "chennai": "chennai",
+    "hyderabad": "hyderabad",
+}
+# ------------------------------------------------
 
 class VoiceAssistant:
     def __init__(self):
@@ -69,6 +90,58 @@ class VoiceAssistant:
                 self.speak("I didn't hear anything")
             return ""
 
+    # ---------------- BOOKING HELPERS ----------------
+    def get_current_city(self):
+        """Get current city and normalize"""
+        try:
+            data = requests.get("https://ipinfo.io", timeout=5).json()
+            raw_city = data.get("city", "Delhi").lower()
+            if raw_city in CITY_CODES_FLIGHT:
+                return raw_city
+            return "delhi"
+        except:
+            return "delhi"
+
+    def parse_travel_date(self, command: str):
+        """Extract simple date info from voice command"""
+        if "tomorrow" in command:
+            return str(date.today() + timedelta(days=1))
+        elif "today" in command:
+            return str(date.today())
+        else:
+            return str(date.today() + timedelta(days=1))
+
+    def open_makemytrip(self, mode, source, destination, travel_date):
+        """Open MakeMyTrip booking page with correct format"""
+        try:
+            y, m, d = travel_date.split("-")
+
+            if mode == "flight":
+                # Flights: YYYYMMDD
+                date_str = f"{y}{m}{d}"
+                src_code = CITY_CODES_FLIGHT.get(source.lower(), "DEL")
+                dest_code = CITY_CODES_FLIGHT.get(destination.lower(), "BOM")
+                url = f"https://www.makemytrip.com/flight/search?itinerary={src_code}-{dest_code}-{date_str}&tripType=O&paxType=A-1&cabinClass=E"
+
+            elif mode == "bus":
+                # Buses: DD-MM-YYYY
+                date_str = f"{d}-{m}-{y}"
+                src_slug = CITY_SLUGS_BUS.get(source.lower(), "delhi")
+                dest_slug = CITY_SLUGS_BUS.get(destination.lower(), "bangalore")
+                url = f"https://www.makemytrip.com/bus/search/{src_slug}/{dest_slug}/{date_str}"
+
+            else:  # train
+                # Trains: DD-MM-YYYY
+                date_str = f"{d}-{m}-{y}"
+                url = f"https://www.makemytrip.com/railways/list?srcCity={source.title()}&destCity={destination.title()}&date={date_str}"
+
+            webbrowser.open(url)
+            return f"Opening {mode} tickets from {source.title()} to {destination.title()} on {date_str}"
+
+        except Exception as e:
+            return f"Error opening MakeMyTrip: {e}"
+    # --------------------------------------------------
+
     def get_weather(self):
         """Get current weather"""
         try:
@@ -85,30 +158,20 @@ class VoiceAssistant:
             return "Weather service unavailable"
 
     def get_news(self, full=False):
-        """Get latest tech news using NewsAPI with retry and longer timeout"""
+        """Get latest tech news"""
         api_key = "d19ed07ff1c8464ab335b5109ded9caf"
         url = f"https://newsapi.org/v2/top-headlines?category=technology&country=in&apiKey={api_key}"
-
-        for attempt in range(2):
-            try:
-                articles = requests.get(url, timeout=10).json().get("articles", [])[:5]
-
-                if not articles:
-                    return "No news found at the moment."
-
-                if full:
-                    news_texts = [f"{art['title']}: {art['description'] or ''}" for art in articles]
-                    return "Here is the latest tech news in detail: " + " ... ".join(news_texts)
-                else:
-                    headlines = [art['title'] for art in articles]
-                    return "Latest tech headlines: " + " ... ".join(headlines)
-
-            except Exception as e:
-                print(f"[NEWS ERROR Attempt {attempt+1}] {e}")
-                if attempt == 0:
-                    time.sleep(2)
-
-        return "News service unavailable after multiple attempts"
+        try:
+            articles = requests.get(url, timeout=10).json().get("articles", [])[:5]
+            if not articles:
+                return "No news found at the moment."
+            if full:
+                return "Here is the latest tech news: " + " ... ".join(
+                    [f"{art['title']}: {art['description'] or ''}" for art in articles])
+            else:
+                return "Latest tech headlines: " + " ... ".join([art['title'] for art in articles])
+        except:
+            return "News service unavailable"
 
     def get_system_info(self):
         """Get PC system stats"""
@@ -152,8 +215,29 @@ class VoiceAssistant:
 
         response = ""
 
+        # --- NEW BOOKING LOGIC ---
+        if "book" in command:
+            try:
+                mode = "train"
+                if "flight" in command:
+                    mode = "flight"
+                elif "bus" in command:
+                    mode = "bus"
+
+                if "to" in command:
+                    destination = command.split("to")[-1].strip().title()
+                else:
+                    destination = "Mumbai"
+
+                source = self.get_current_city()
+                travel_date = self.parse_travel_date(command)
+
+                response = self.open_makemytrip(mode, source, destination, travel_date)
+            except Exception as e:
+                response = f"Sorry, I couldn't process booking. Error: {e}"
+
         # Weather
-        if "weather" in command:
+        elif "weather" in command:
             response = self.get_weather()
 
         # News
@@ -242,7 +326,6 @@ class VoiceAssistant:
         while self.running and not self._stop_event.is_set():
             self.speak("Press and hold V to speak", use_ai_voice=False)
             
-            # Wait for 'v' key press or stop event
             start_time = time.time()
             while not self._stop_event.is_set():
                 if keyboard.is_pressed('v'):
@@ -252,15 +335,12 @@ class VoiceAssistant:
                             self.stop()
                             return
                     break
-                
-                # Check every 100ms and timeout after 30 seconds of inactivity
                 time.sleep(0.1)
                 if time.time() - start_time > 30:
                     break
             
             if self._stop_event.is_set():
                 break
-                
             time.sleep(0.5)
 
     def stop(self):

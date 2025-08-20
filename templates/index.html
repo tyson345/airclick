@@ -1196,9 +1196,7 @@
                             <h3 class="controls-title">🎮 Mode Controls</h3>
                             <div class="mode-controls">
                                 <button class="control-button start-button" onclick="startMode('regular')">▶ Start Regular Mode</button>
-                                <label class="control-button stop-button" style="cursor: pointer; margin: 0;">
-                                    <input type="checkbox" style="margin-right: 8px;"> Stop Mode
-                                </label>
+                               <button class="control-button stop-button" onclick="stopMode('regular')" disabled>Stop Mode</button>
                             </div>
                             <div class="mode-status status-inactive" id="regularStatus">
                                 <span class="status-indicator"></span>
@@ -1220,75 +1218,84 @@
                 </div>
 
                 <!-- Updated Movie Mode Interface to match reference layout -->
-                <div id="movieInterface" class="mode-control-interface">
-                    <div class="mode-header">
-                        <div class="mode-icon">🎬</div>
-                        <div class="mode-header-text">
-                            <h2 class="mode-title">Movie Mode</h2>
-                            <p class="mode-description">Gesture controls for seamless video playback experience</p>
+                <!-- Movie Mode Interface -->
+<div id="movieInterface" class="mode-control-interface">
+    <div class="mode-header">
+        <div class="mode-icon">🎬</div>
+        <div class="mode-header-text">
+            <h2 class="mode-title">Movie Mode</h2>
+            <p class="mode-description">Gesture controls for seamless video playback experience</p>
+        </div>
+    </div>
+    
+    <div class="mode-content-wrapper">
+        <div class="mode-info-section">
+            <div class="gesture-instructions">
+                <h3 class="instructions-title">✨ Available Gestures</h3>
+                <p class="instructions-subtitle">Control your media with simple hand movements</p>
+                <div class="gesture-list">
+                    <!-- Added detailed gesture instructions for movie mode -->
+                    <div class="gesture-item">
+                        <span class="gesture-icon">👆</span>
+                        <div class="gesture-details">
+                            <span class="gesture-name">One Finger Up</span>
+                            <span class="gesture-action">Toggle play/pause for your video content. Perfect for quick control without reaching for keyboard.</span>
+                            <span class="action-label">Action: Play/Pause (K key)</span>
                         </div>
                     </div>
-                    
-                    <div class="mode-content-wrapper">
-                        <div class="mode-info-section">
-                            <div class="gesture-instructions">
-                                <h3 class="instructions-title">✨ Available Gestures</h3>
-                                <p class="instructions-subtitle">Control your media with simple hand movements</p>
-                                <div class="gesture-list">
-                                    <div class="gesture-item">
-                                        <span class="gesture-icon">👆</span>
-                                        <div class="gesture-details">
-                                            <span class="gesture-name">One Finger Up</span>
-                                            <span class="gesture-action">Raise a single finger to play or pause your video content instantly. Perfect for quick media control without touching any device.</span>
-                                            <span class="action-label">Action: Play/Pause Video</span>
-                                        </div>
-                                    </div>
-                                    <div class="gesture-item">
-                                        <span class="gesture-icon">✌️</span>
-                                        <div class="gesture-details">
-                                            <span class="gesture-name">Two Fingers Up</span>
-                                            <span class="gesture-action">Show the peace sign to fast forward through your video. Great for skipping ahead during presentations or movies.</span>
-                                            <span class="action-label">Action: Fast Forward</span>
-                                        </div>
-                                    </div>
-                                    <div class="gesture-item">
-                                        <span class="gesture-icon">🤟</span>
-                                        <div class="gesture-details">
-                                            <span class="gesture-name">Three Fingers Up</span>
-                                            <span class="gesture-action">Display three fingers to rewind and go back in your video timeline. Useful for reviewing content or going back to missed sections.</span>
-                                            <span class="action-label">Action: Rewind</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                    <div class="gesture-item">
+                        <span class="gesture-icon">✌️</span>
+                        <div class="gesture-details">
+                            <span class="gesture-name">Two Fingers Up</span>
+                            <span class="gesture-action">Fast forward through your video content to skip ahead quickly.</span>
+                            <span class="action-label">Action: Fast Forward (L key)</span>
                         </div>
-                        
-                        <div class="mode-controls-section">
-                            <h3 class="controls-title">🎮 Mode Controls</h3>
-                            <div class="mode-controls">
-                                <button class="control-button start-button" onclick="startMode('movie')">▶ Start Movie Mode</button>
-                                <label class="control-button stop-button" style="cursor: pointer; margin: 0;">
-                                    <input type="checkbox" style="margin-right: 8px;"> Stop Mode
-                                </label>
-                            </div>
-                            <div class="mode-status status-active" id="movieStatus">
-                                <span class="status-indicator"></span>
-                                <span>Mode Status:</span>
-                                <span class="status-text">Active</span>
-                            </div>
-                            <div class="session-stats">
-                                <div class="stat-item">
-                                    <span class="stat-number">127</span>
-                                    <span class="stat-label">Gestures</span>
-                                </div>
-                                <div class="stat-item">
-                                    <span class="stat-number">45m</span>
-                                    <span class="stat-label">Session Time</span>
-                                </div>
-                            </div>
+                    </div>
+                    <div class="gesture-item">
+                        <span class="gesture-icon">🤟</span>
+                        <div class="gesture-details">
+                            <span class="gesture-name">Three Fingers Up</span>
+                            <span class="gesture-action">Rewind your video content to go back and replay sections.</span>
+                            <span class="action-label">Action: Rewind (J key)</span>
+                        </div>
+                    </div>
+                    <!-- Added five fingers gesture for fullscreen toggle -->
+                    <div class="gesture-item">
+                        <span class="gesture-icon">🖐️</span>
+                        <div class="gesture-details">
+                            <span class="gesture-name">Five Fingers Open</span>
+                            <span class="gesture-action">Toggle fullscreen mode to enter or exit immersive viewing experience.</span>
+                            <span class="action-label">Action: Toggle Fullscreen (F key)</span>
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+        
+        <div class="mode-controls-section">
+            <h3 class="controls-title">🎮 Mode Controls</h3>
+            <div class="mode-controls">
+                <button class="control-button start-button" onclick="startMode('movie')">▶ Start Movie Mode</button>
+                <button class="control-button stop-button" onclick="stopMode('movie')" disabled>Stop Mode</button>
+            </div>
+            <div class="mode-status status-inactive" id="movieStatus">
+                <span class="status-indicator"></span>
+                <span>Mode Status:</span>
+                <span class="status-text">Inactive</span>
+            </div>
+            <div class="session-stats">
+                <div class="stat-item">
+                    <span class="stat-number">0</span>
+                    <span class="stat-label">Gestures</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">0m</span>
+                    <span class="stat-label">Session Time</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
                 <!-- Updated Game Mode Interface with proper structure and gesture instructions -->
                 <div id="gameInterface" class="mode-control-interface">
@@ -1747,6 +1754,8 @@
         }
 
         function startMode(mode) {
+            console.log("[v0] Starting mode:", mode);
+            
             fetch('/run', {
                 method: 'POST',
                 headers: {
@@ -1754,74 +1763,116 @@
                 },
                 body: JSON.stringify({ mode: mode })
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log("[v0] Start mode response status:", response.status);
+                return response.json();
+            })
             .then(data => {
+                console.log("[v0] Start mode response data:", data);
+                
                 if (data.status === 'success') {
                     modeStates[mode] = true;
                     updateModeUI(mode, true);
-                    showNotification(`${mode.charAt(0).toUpperCase() + mode.slice(1)} Mode started successfully!`, 'success');
+                    showNotification(data.message, 'success');
+                    setActiveNavItem(getNavIndexForMode(mode));
                 } else {
-                    showNotification(`Failed to start ${mode} mode: ${data.message}`, 'error');
+                    showNotification(data.message, 'error');
                 }
             })
             .catch(error => {
-                console.error('Error starting mode:', error);
+                console.error('[v0] Error starting mode:', error);
                 showNotification(`Error starting ${mode} mode`, 'error');
             });
         }
 
-        function stopMode(mode) {
-            fetch('/stop_mode', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ mode: mode })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    modeStates[mode] = false;
-                    updateModeUI(mode, false);
-                    showNotification(`${mode.charAt(0).toUpperCase() + mode.slice(1)} Mode stopped successfully!`, 'success');
-                    
-                    if (mode === 'camera') {
-                        // Stop any video streams
-                        const videoElements = document.querySelectorAll('video');
-                        videoElements.forEach(video => {
-                            if (video.srcObject) {
-                                const tracks = video.srcObject.getTracks();
-                                tracks.forEach(track => track.stop());
-                                video.srcObject = null;
-                            }
-                        });
-                    }
-                } else {
-                    showNotification(`Failed to stop ${mode} mode: ${data.error}`, 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error stopping mode:', error);
-                showNotification(`Error stopping ${mode} mode`, 'error');
+       function stopMode(mode) {
+    console.log("[v0] Stop button clicked for mode:", mode);
+    console.log("[v0] Current mode state:", modeStates[mode]);
+    
+    fetch('/stop_mode', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ mode: mode })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log("[v0] Stop mode response data:", data);
+        
+        if (data.success) {
+            modeStates[mode] = false;
+            updateModeUI(mode, false);
+            showNotification(`${mode.charAt(0).toUpperCase() + mode.slice(1)} Mode stopped successfully!`, 'success');
+            
+            // Special handling for camera mode
+            if (mode === 'camera') {
+                // You might need to add additional cleanup here if needed
+            }
+        } else {
+            showNotification(`Failed to stop ${mode} mode: ${data.error || data.message}`, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('[v0] Error stopping mode:', error);
+        showNotification(`Error stopping ${mode} mode`, 'error');
+    });
+}
+
+
+       function updateModeUI(mode, isActive) {
+    const interface = document.getElementById(`${mode}Interface`);
+    if (!interface) return;
+
+    const startButton = interface.querySelector('.start-button');
+    const stopButton = interface.querySelector('.stop-button');
+    const statusElement = document.getElementById(`${mode}Status`);
+    
+    if (isActive) {
+        if (startButton) startButton.disabled = true;
+        if (stopButton) stopButton.disabled = false;
+        if (statusElement) {
+            statusElement.classList.remove('status-inactive');
+            statusElement.classList.add('status-active');
+            statusElement.querySelector('.status-text').textContent = 'Active';
+        }
+    } else {
+        if (startButton) startButton.disabled = false;
+        if (stopButton) stopButton.disabled = true;
+        if (statusElement) {
+            statusElement.classList.remove('status-active');
+            statusElement.classList.add('status-inactive');
+            statusElement.querySelector('.status-text').textContent = 'Inactive';
+        }
+        
+        // Reset stats
+        const stats = interface.querySelector('.session-stats');
+        if (stats) {
+            stats.querySelectorAll('.stat-number').forEach(el => {
+                el.textContent = '0';
             });
         }
+    }
+}
 
-        function updateModeUI(mode, isActive) {
-            const startButton = document.querySelector(`#${mode}Interface .start-button`);
-            const stopButton = document.querySelector(`#${mode}Interface .stop-button`);
-            const status = document.getElementById(`${mode}Status`);
-
-            if (isActive) {
-                startButton.disabled = true;
-                stopButton.disabled = false;
-                status.textContent = 'Mode Active';
-                status.className = 'mode-status status-active';
-            } else {
-                startButton.disabled = false;
-                stopButton.disabled = true;
-                status.textContent = 'Mode Inactive';
-                status.className = 'mode-status status-inactive';
-            }
+// Add initialization code
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all modes to inactive state
+    Object.keys(modeStates).forEach(mode => {
+        updateModeUI(mode, false);
+    });
+    showWelcome();
+});
+        function getNavIndexForMode(mode) {
+            const modeMap = {
+                'regular': 3,
+                'movie': 4,
+                'presentation': 5,
+                'camera': 6,
+                'game': 7,
+                'websocket': 8
+            };
+            return modeMap[mode] || 0;
         }
 
         function setActiveNavItem(index) {
@@ -2084,7 +2135,7 @@
 
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
-            showWelcome();
+            showWelcome(); 
         });
     </script>
 </body>

@@ -2,6 +2,8 @@ import cv2
 import mediapipe as mp
 import time
 from collections import deque
+import sys
+import signal
 
 class CameraGestureControl:
     def __init__(self):
@@ -130,6 +132,25 @@ class CameraGestureControl:
         
         self.cap.release()
         cv2.destroyAllWindows()
+
+    def cleanup():
+        global cap
+        try:
+            if 'cap' in globals() and cap.isOpened():
+                cap.release()
+        except Exception:
+            pass
+        cv2.destroyAllWindows()
+
+def signal_handler(sig, frame):
+    CameraGestureControl.cleanup()
+    sys.exit(0)
+
+signal.signal(signal.SIGTERM, signal_handler)
+signal.signal(signal.SIGINT, signal_handler)
+
+# At the start of your main loop:
+cap = cv2.VideoCapture(0)
 
 if __name__ == "__main__":
     control = CameraGestureControl()
